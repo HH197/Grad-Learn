@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-
 The ZINB-WaVE implementation using the gradient descent approach,
  pytorch, and Pyro.
 
@@ -96,7 +95,7 @@ def loss_zinb(x, p, model):
 
 
 
-def train_ZINB(optimizer, x, model, epochs = 300):
+def train_ZINB(x, optimizer, model, epochs = 300):
     
     losses = []
     neg_log_liks = []
@@ -125,12 +124,27 @@ def train_ZINB(optimizer, x, model, epochs = 300):
     return losses, neg_log_liks
 
 
-y1 = torch.from_numpy(y)
+def val_ZINB(val_data, model, optimizer): 
+    
+# =============================================================================
+#     The parameters in params would stay the same during the validation process 
+#     However, the W, and gammas would change because their dimension depend on 
+#     the number of samples, which will change with validation and test sets
+# =============================================================================
 
-model = ZINB_WaVE(Y = y1, K = 10)
-
-optimizer = torch.optim.Adam(model.parameters(), lr = 0.01)
-
-losses, neg_log_liks = train_ZINB(optimizer, y1, model, epochs = 300)
+    params = ['log_theta', 'beta_mu', 'beta_pi', 'alpha_mu', 'alpha_pi']
+    
+    for name, param in model.named_parameters():
+        if name in params:
+            param.requires_grad = False
+    
+    model2 = ZINB_WaVE(Y = val_data, K = 10)
+    
+    for name in params: 
+        setattr(model2, name, getattr(model, name))
+    
+    losses, neg_log_liks  = train_ZINB(val_data, optimizer, model2, epochs = 300)
+    
+    return neg_log_liks[-1]
 
 

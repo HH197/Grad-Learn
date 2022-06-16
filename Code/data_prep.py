@@ -13,13 +13,12 @@ import pandas as pd
 import torch
 
 
-if __name__ == '__main__':
-    
-    base_dir = "/home/longlab/Data/Thesis/Data/"
+def Zeisel_data(base_path = "/home/longlab/Data/Thesis/Data/", 
+           n_genes = 558):
     
     np.random.seed(197)
     
-    df = pd.read_csv(base_dir + 'Zeisel.zip', compression='zip', delimiter= '\t', low_memory=False)
+    df = pd.read_csv(base_path + 'Zeisel.zip', compression='zip', delimiter= '\t', low_memory=False)
     # Groups of cells, i.e. labels
     Groups = df.iloc[0,]
     # print(Groups.value_counts())
@@ -35,7 +34,7 @@ if __name__ == '__main__':
     # data = np.log10(data)  # log transforming the data
     
     # permutation
-    n_genes = 558 # selecting the number of genes, i.e. number of features
+    # selecting the number of genes, i.e. number of features
     
     rows = np.argsort(np.var(data, axis = 1)*-1) # sorting the data based on the variance
     data = data[rows,:]
@@ -51,3 +50,6 @@ if __name__ == '__main__':
     
     y = data.T #whole data set
     y = torch.from_numpy(y)
+   
+
+    return y

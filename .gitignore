@@ -10,3 +10,5 @@
 /Data
 
 *.pyc
+
+*.bin

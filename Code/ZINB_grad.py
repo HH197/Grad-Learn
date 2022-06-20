@@ -126,11 +126,13 @@ def train_ZINB(x, optimizer, model, epochs = 300):
 
 def val_ZINB(val_data, model, optimizer): 
     
-# =============================================================================
-#     The parameters in params would stay the same during the validation process 
-#     However, the W, and gammas would change because their dimension depend on 
-#     the number of samples, which will change with validation and test sets
-# =============================================================================
+
+    """ 
+    The parameters in params would be the same during the validation process 
+    However, the W, and gammas would change because their dimension depend on 
+    the number of samples, which will change with validation and test sets
+    
+    """
 
     params = ['log_theta', 'beta_mu', 'beta_pi', 'alpha_mu', 'alpha_pi']
     

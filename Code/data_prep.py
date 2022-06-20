@@ -18,11 +18,14 @@ def Zeisel_data(base_path = "/home/longlab/Data/Thesis/Data/",
     
     np.random.seed(197)
     
-    df = pd.read_csv(base_path + 'Zeisel.zip', compression='zip', delimiter= '\t', low_memory=False)
+    df = pd.read_csv(base_path + 'expression_mRNA_17-Aug-2014.txt', 
+                     delimiter= '\t', low_memory=False)
     # Groups of cells, i.e. labels
-    Groups = df.iloc[0,]
+    Groups = df.iloc[7,]
     # print(Groups.value_counts())
     Groups = Groups.values[2:]
+    _ , labels = np.unique(Groups, return_inverse=True)
+    
     df1 = df.iloc[10:].copy()
     df1.drop(['tissue', 'Unnamed: 0'], inplace=True, axis=1)
     df1 = df1.astype(float)
@@ -36,7 +39,8 @@ def Zeisel_data(base_path = "/home/longlab/Data/Thesis/Data/",
     # permutation
     # selecting the number of genes, i.e. number of features
     
-    rows = np.argsort(np.var(data, axis = 1)*-1) # sorting the data based on the variance
+    # sorting the data based on the variance
+    rows = np.argsort(np.var(data, axis = 1)*-1) 
     data = data[rows,:]
     data = data[0:n_genes, :] # choosing high variable genes 
     
@@ -46,10 +50,11 @@ def Zeisel_data(base_path = "/home/longlab/Data/Thesis/Data/",
     p = np.random.permutation(data.shape[1])
     data[:,:] = data[:,p]
     
-    Groups = Groups[p]
+    labels = labels[p]
     
     y = data.T #whole data set
     y = torch.from_numpy(y)
-   
+    
+    
 
-    return y
+    return y, labels

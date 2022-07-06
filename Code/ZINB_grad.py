@@ -7,7 +7,7 @@ The ZINB-WaVE implementation using the gradient descent approach,
 """
 import torch
 from torch import nn
-from pyro.distributions import ZeroInflatedNegativeBinomial
+from pyro.distributions import ZeroInflatedNegativeBinomial as ZINB
 
 
 
@@ -16,7 +16,14 @@ from pyro.distributions import ZeroInflatedNegativeBinomial
 class ZINB_WaVE(nn.Module):
 
     def __init__(self,
-                 Y, 
+                 Y,
+                 W=None,
+                 alpha_mu=None,
+                 alpha_pi=None,
+                 beta_mu=None,
+                 beta_pi=None,
+                 gamma_mu=None,
+                 gamma_pi=None,
                  X=None, 
                  V=None, 
                  O_mu=None, 
@@ -82,9 +89,9 @@ class ZINB_WaVE(nn.Module):
         eps_alpha_pi = 1
         eps_theta = J
         
-        loss = ZeroInflatedNegativeBinomial(total_count= torch.exp(self.log_theta), 
-                                                      probs = p, 
-                                                      gate_logits = self.log_pi).log_prob(x).sum()
+        loss = ZINB(total_count= torch.exp(self.log_theta), 
+                    probs = p, 
+                    gate_logits = self.log_pi).log_prob(x).sum()
         
         pen = eps_W * torch.linalg.norm(self.W, ord='fro').square().item()/2 + \
           eps_alpha_mu * torch.linalg.norm(self.alpha_mu, ord='fro').square().item()/2 + \

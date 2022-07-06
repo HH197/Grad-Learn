@@ -44,12 +44,31 @@ class ZINB_WaVE(nn.Module):
           
         if X == None:
             self.X = torch.ones((self.n, 1))
-            self.beta_mu = nn.Parameter(torch.rand((1, self.J)))
-            self.beta_pi = nn.Parameter(torch.rand((1, self.J)))
+            
+            if beta_mu == None:
+                self.beta_mu = nn.Parameter(torch.rand((1, self.J)))
+            else: 
+                self.beta_mu = beta_mu
+                
+            if beta_pi == None:    
+                self.beta_pi = nn.Parameter(torch.rand((1, self.J)))
+            else:
+                self.beta_pi = beta_pi
+                
         else: 
             _, self.M = X.size()
-            self.beta_mu = nn.Parameter(torch.rand(self.M,self.J))
-            self.beta_pi = nn.Parameter(torch.rand(self.M,self.J))
+            
+            if beta_mu == None:
+                self.beta_mu = nn.Parameter(torch.rand(self.M,self.J))
+            else: 
+                self.beta_mu = beta_mu
+                
+            if beta_pi == None:    
+                self.beta_pi = nn.Parameter(torch.rand(self.M,self.J))
+            else:
+                self.beta_pi = beta_pi
+            
+            
     
         if V == None:
             self.V = torch.ones((self.J, 1))

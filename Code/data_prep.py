@@ -10,7 +10,7 @@ import torch
 import h5py
 
 from scipy.sparse import csc_matrix
-from scipy.sparse import vstack
+# from scipy.sparse import vstack
 from sklearn.preprocessing import StandardScaler
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
@@ -128,7 +128,10 @@ class Brain_Large(Dataset):
         The indices of selected high variable genes.
 
      '''
-    def __init__(self, file_dir, n_sub_samples = 10**5, n_select_genes = 720):
+    def __init__(self, 
+                 file_dir = "/home/longlab/Data/Thesis/Data/1M_neurons_filtered_gene_bc_matrices_h5.h5",
+                 n_sub_samples = 10**5, 
+                 n_select_genes = 720):
         
         '''
         Initialize the Brain_Large Dataset class
@@ -192,7 +195,7 @@ class Brain_Large(Dataset):
         
         matrix_batch = matrix_batch.toarray().T[:, self.selected_genes]
         matrix_batch = torch.tensor(matrix_batch, dtype=torch.float32)
-        return matrix_batch
+        return matrix_batch, index
             
 #     Another thing is that we will not have enough memory to train the zinb on big datasets
 #     I think we should do it based on batches => how to do it? have a fixed big matrix 

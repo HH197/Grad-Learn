@@ -99,6 +99,7 @@ def train_ZINB(x, optimizer, model, epochs = 300):
     
     losses = []
     neg_log_liks = []
+    
     for i in range(epochs):
 
       i += 1 

@@ -69,19 +69,47 @@ class ZINB_WaVE(nn.Module):
                 self.beta_pi = beta_pi
             
             
-    
         if V == None:
             self.V = torch.ones((self.J, 1))
-            self.gamma_mu = nn.Parameter(torch.rand((1, self.n)))
-            self.gamma_pi = nn.Parameter(torch.rand((1, self.n)))
+            
+            if gamma_mu == None:
+                self.gamma_mu = nn.Parameter(torch.rand((1, self.n)))
+            else: 
+                self.gamma_mu = gamma_mu
+            
+            if gamma_pi == None:  
+                self.gamma_pi = nn.Parameter(torch.rand((1, self.n)))
+            else: 
+                self.gamma_pi = gamma_pi
+                
         else: 
             _, self.L = V.size()
-            self.gamma_mu = nn.Parameter(torch.rand((self.L, self.n)))
-            self.gamma_pi = nn.Parameter(torch.rand((self.L, self.n)))
+            
+            if gamma_mu == None:
+                self.gamma_mu = nn.Parameter(torch.rand((self.L, self.n)))
+            else: 
+                self.gamma_mu = gamma_mu
+            
+            if gamma_pi == None:  
+                self.gamma_pi = nn.Parameter(torch.rand((self.L, self.n)))
+            else: 
+                self.gamma_pi = gamma_pi
+            
+            
+        if W == None:     
+            self.W = nn.Parameter(torch.rand((self.n, self.K)))
+        else: 
+            self.W = W
+            
+        if alpha_mu == None:
+            self.alpha_mu = nn.Parameter(torch.rand((self.K,self.J)))
+        else: 
+            self.alpha_mu =alpha_mu
         
-        self.W = nn.Parameter(torch.rand((self.n, self.K)))
-        self.alpha_mu = nn.Parameter(torch.rand((self.K,self.J)))
-        self.alpha_pi = nn.Parameter(torch.rand((self.K,self.J)))
+        if alpha_pi == None:    
+            self.alpha_pi = nn.Parameter(torch.rand((self.K,self.J)))
+        else: 
+            self.alpha_pi = alpha_pi
 
 
     def forward(self, x):

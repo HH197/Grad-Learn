@@ -18,7 +18,9 @@ from torch.utils.data import DataLoader
 
 def Zeisel_data(file_dir= "/home/longlab/Data/Thesis/Data/expression_mRNA_17-Aug-2014.txt", 
            n_genes = 558):
+    
     '''
+    
     This function will perform the pre-processing steps for the gold standard Zeisel data set. 
     
     This steps are: 
@@ -42,7 +44,9 @@ def Zeisel_data(file_dir= "/home/longlab/Data/Thesis/Data/expression_mRNA_17-Aug
     
     labels : str
         The true labels (cell types)
+    
     '''
+    
     np.random.seed(197)
     
     df = pd.read_csv(file_dir, delimiter= '\t', low_memory=False)
@@ -196,6 +200,50 @@ class Brain_Large(Dataset):
         matrix_batch = matrix_batch.toarray().T[:, self.selected_genes]
         matrix_batch = torch.tensor(matrix_batch, dtype=torch.float32)
         return matrix_batch, index
+
+
+
+from torch.utils.data import Sampler
+
+class Brain_Large_Sampler(Sampler):
+    
+    '''
+    This is a sampler for Pytorch ``DataLoader`` in which it will sample from the 
+    ``Dataset`` with indices of mask.
+    
+    Parameters
+    ----------
+    
+    mask: ``torch.tensor`` 
+        The indices of the samples.
+    
+    
+    Example
+    ----------
+    
+        >>> brain = Brain_Large()
+        >>> dataloader = torch.utils.data.DataLoader(brain, 
+                                                     batch_size=64, 
+                                                     shuffle=True)
+        >>> a, b = next(iter(dataloader))
+        >>> trainloader_sampler1 = torch.utils.data.DataLoader(brain,
+                                                           batch_size=64,
+                                                           sampler = Brain_Large_Sampler(b),
+                                                           shuffle=False)
+        >>> b, c = next(iter(dataloader))
+        
+    '''
+    def __init__(self, mask):
+        self.mask = mask
+
+    def __iter__(self):
+        return (i for i in self.mask)
+
+    def __len__(self):
+        return len(self.mask)
+
+
+
             
 #     Another thing is that we will not have enough memory to train the zinb on big datasets
 #     I think we should do it based on batches => how to do it? have a fixed big matrix 

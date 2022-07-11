@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
+#How to use the optimizer parameters? Should I use them? 
 """
 The ZINB-WaVE implementation using the gradient descent approach,
  pytorch, and Pyro.

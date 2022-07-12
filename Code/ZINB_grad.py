@@ -41,7 +41,8 @@ class ZINB_WaVE(nn.Module):
         self.X = X
         self.V = V
         self.K = K 
-    
+        
+        # How about theta?
         self.log_theta = nn.Parameter(torch.rand((1, self.J)))
           
         if X == None:
@@ -181,7 +182,7 @@ def train_ZINB(x, optimizer, model, epochs = 300):
     return losses, neg_log_liks
 
 
-def val_ZINB(val_data, model, optimizer): 
+def val_ZINB(val_data, model, optimizer, epochs = 300): 
     
 
     """ 
@@ -197,12 +198,12 @@ def val_ZINB(val_data, model, optimizer):
         if name in params:
             param.requires_grad = False
     
-    model2 = ZINB_WaVE(Y = val_data, K = 10)
+    model2 = ZINB_WaVE(Y = val_data, K = model.K)
     
     for name in params: 
         setattr(model2, name, getattr(model, name))
     
-    losses, neg_log_liks  = train_ZINB(val_data, optimizer, model2, epochs = 300)
+    losses, neg_log_liks  = train_ZINB(val_data, optimizer, model2, epochs = epochs)
     
     return neg_log_liks[-1]
 

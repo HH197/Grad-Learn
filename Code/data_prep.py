@@ -13,7 +13,7 @@ from scipy.sparse import csc_matrix
 # from scipy.sparse import vstack
 from sklearn.preprocessing import StandardScaler
 from torch.utils.data import Dataset
-from torch.utils.data import DataLoader
+from torch.utils.data import Sampler
 
 
 def Zeisel_data(file_dir= "/home/longlab/Data/Thesis/Data/expression_mRNA_17-Aug-2014.txt", 
@@ -203,8 +203,6 @@ class Brain_Large(Dataset):
 
 
 
-from torch.utils.data import Sampler
-
 class Brain_Large_Sampler(Sampler):
     
     '''
@@ -220,7 +218,7 @@ class Brain_Large_Sampler(Sampler):
     
     Example
     ----------
-    
+        >>> from torch.utils.data import DataLoader
         >>> brain = Brain_Large()
         >>> dataloader = torch.utils.data.DataLoader(brain, 
                                                      batch_size=64, 
@@ -230,7 +228,7 @@ class Brain_Large_Sampler(Sampler):
                                                            batch_size=64,
                                                            sampler = Brain_Large_Sampler(b),
                                                            shuffle=False)
-        >>> b, c = next(iter(dataloader))
+        >>> c, d = next(iter(dataloader))
         
     '''
     def __init__(self, mask):

@@ -26,6 +26,7 @@ class ZINB_WaVE(nn.Module):
                  beta_pi=None,
                  gamma_mu=None,
                  gamma_pi=None,
+                 log_theta=None,
                  X=None, 
                  V=None, 
                  O_mu=None, 
@@ -42,8 +43,11 @@ class ZINB_WaVE(nn.Module):
         self.V = V
         self.K = K 
         
-        # How about theta?
-        self.log_theta = nn.Parameter(torch.rand((1, self.J)))
+        if log_theta == None: 
+            self.log_theta = nn.Parameter(torch.rand((1, self.J)))
+        else:
+            self.log_theta = log_theta
+            
           
         if X == None:
             self.X = torch.ones((self.n, 1))

@@ -128,7 +128,7 @@ class ZINB_WaVE(nn.Module):
         self.mu = torch.exp(self.log_mu)
         self.theta = torch.exp(self.log_theta)
         
-        p = self.mu/(self.mu + self.theta + 1e-4)
+        p = self.mu/(self.mu + self.theta + 1e-3)
         
         return p
 

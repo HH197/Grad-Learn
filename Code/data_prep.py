@@ -231,7 +231,7 @@ class Brain_Large_Sampler(Sampler):
                                                            batch_size=64,
                                                            sampler = Brain_Large_Sampler(b),
                                                            shuffle=False)
-        >>> c, d = next(iter(dataloader))
+        >>> c, d = next(iter(trainloader_sampler1))
         
     '''
     def __init__(self, mask):

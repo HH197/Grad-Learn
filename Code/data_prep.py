@@ -186,7 +186,10 @@ class Brain_Large(Dataset):
     def __getitem__(self, index):
         
         with h5py.File(self.file_dir, 'r') as f:
+            
             data = f['mm10']
+            
+            # try to initalize the data in init and then use data in the getitem? 
             
             indptr_sub_samp = data['indptr'][index:(index+1)+1]
             first_indx = indptr_sub_samp[0]

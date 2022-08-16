@@ -173,7 +173,7 @@ def train_ZINB(x, optimizer, model, epochs = 300):
       loss = neg_log_lik + pen
 
       losses.append(loss.detach().numpy())
-      neg_log_liks.append(neg_log_lik)
+      neg_log_liks.append(neg_log_lik.detach().numpy())
       
       if i%50 == 1:
         print(f'epoch: {i:3}  loss: {loss.item():10.2f}')

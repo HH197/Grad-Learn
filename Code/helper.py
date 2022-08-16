@@ -97,7 +97,7 @@ replaced an entry n with a Bin(n, 0.2) random variable.
         The probability of success in Bernoulli or Binomial distribution.
         
     method: str 
-        Specifies the method of data corruption, one of the two options: 'Uniform' and 'Binomial'
+        Specifies the method of data corruption, one of the two options: "Uniform" and "Binomial"
     
     percentage: float >0 and <1.
         The percentage of non-zero elements to be selected for corruption. 
@@ -112,11 +112,52 @@ replaced an entry n with a Bin(n, 0.2) random variable.
     '''
     
     data_c = np.copy(data)
-    
     x, y = np.nonzero(data)
-    
     ind = np.random.choice(len(x), int(0.1 * len(x)), replace=False)
     
-    if method == 'Uniform' else # to be developed
+    if method == 'Uniform':
+        data_c[x[ind], y[ind]] *= np.random.binomial(1, p)
+        
+    elif method == 'Binomial':
+        data_c[x[ind], y[ind]] = np.random.binomial(data_c[x[ind], y[ind]].astype(np.int), p)
+        
+    else:
+        raise ValueError('''Method can be one of "Uniform" or "Binomial"''') 
+    # to be developed
     
     return data_c, x, y, ind
+
+def Eval_Imputation (data, data_imp, x, y, ind):
+    
+    '''
+    Calculates the median L1 distance between the original dataset and the 
+    imputed values for corrupted entries only.
+    
+    Parameters
+    ----------
+    data : numpy ndarray 
+        The data.
+        
+    data_imp : numpy ndarray 
+        The imputed data.
+        
+    x, y, ind : int
+        The indices of where corruption is applied. 
+        
+    Returns
+    -------
+    L1 : float
+        The median L1 distance between original and imputed datasets at given
+    indices.
+    '''
+    
+    L1 = np.median(np.abs(data[x[ind], y[ind]] - data_imp[x[ind], y[ind]]))
+    
+    return L1
+    
+    
+    
+    
+    
+    
+    

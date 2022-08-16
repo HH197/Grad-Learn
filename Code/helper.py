@@ -73,3 +73,50 @@ def measure_q(data, Groups= None, n_clusters=6,
     
     plt.show()
 
+def corrupting(data, p = 0.10, method = 'Uniform', percentage = 0.10):
+    
+    '''
+    Adopted from the "Deep Generative modeling for transcriptomics data"
+    
+    This function will corrupt  (adding noise or dropouts) the datasets for
+    imputation benchmarking. 
+    
+    Two different approaches for data corruption: 
+        1. Uniform zero introduction: Randomly selected a percentage of the nonzero 
+        entries and multiplied the entry n with a Ber(0.9) random variable. 
+        2. Binomial data corruption: Randomly selected a percentage of the matrix and
+replaced an entry n with a Bin(n, 0.2) random variable.
+
+
+    Parameters
+    ----------
+    data : numpy ndarray 
+        The data.
+        
+    p : float >= 0 and <=1
+        The probability of success in Bernoulli or Binomial distribution.
+        
+    method: str 
+        Specifies the method of data corruption, one of the two options: 'Uniform' and 'Binomial'
+    
+    percentage: float >0 and <1.
+        The percentage of non-zero elements to be selected for corruption. 
+        
+    Returns
+    -------
+    data_c : numpy ndarray 
+        The corrupted data.
+    
+    x, y, ind : int
+        The indices of where corruption is applied. 
+    '''
+    
+    data_c = np.copy(data)
+    
+    x, y = np.nonzero(data)
+    
+    ind = np.random.choice(len(x), int(0.1 * len(x)), replace=False)
+    
+    if method == 'Uniform' else # to be developed
+    
+    return data_c, x, y, ind

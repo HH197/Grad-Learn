@@ -129,7 +129,7 @@ class ZINB_WaVE(nn.Module):
         self.theta = torch.exp(self.log_theta)
         
         # if you make them double (float64) it will use the memory exponantially 
-        p = self.mu/(self.mu + self.theta + 1e-4)
+        p = self.mu/(self.mu + self.theta + 1e-4 + 1e-4*self.mu + 1e-4*self.theta)
         
         return p
 

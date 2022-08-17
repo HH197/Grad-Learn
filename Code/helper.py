@@ -15,6 +15,7 @@ from matplotlib import pyplot as plt
 from pandas import DataFrame
 import numpy as np
 
+
 def kmeans(data, kmeans_kwargs = {"init": "random", 
                                    "n_init": 50, 
                                    "max_iter": 400, 
@@ -46,6 +47,28 @@ def plot_si(sil_coeff):
     plt.ylabel("Silhouette Coefficient")
     plt.show()
     # plt.savefig(base_dir + 'test1.png')
+
+def plot_loss(losses, xlab = 'Epoch', ylab = 'Neg-Loglikelihood'):
+    
+    '''
+    This function will plot the tracked losses during training. 
+    
+    Parameters
+    ----------
+    losses : list 
+        The losses.
+    
+    xlab : str
+        The x axis label.
+    
+    ylab : str
+        The y axis label.
+    '''
+    
+    plt.plot(range(len(losses)), losses)
+    plt.ylabel(ylab)
+    plt.xlabel(xlab)
+
 
 
 def measure_q(data, Groups= None, n_clusters=6,  

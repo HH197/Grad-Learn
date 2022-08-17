@@ -134,7 +134,7 @@ replaced an entry n with a Bin(n, 0.2) random variable.
         The indices of where corruption is applied. 
     '''
     
-    data_c = np.copy(data)
+    data_c = data.astype(np.int32)
     x, y = np.nonzero(data)
     ind = np.random.choice(len(x), int(0.1 * len(x)), replace=False)
     
@@ -142,13 +142,14 @@ replaced an entry n with a Bin(n, 0.2) random variable.
         data_c[x[ind], y[ind]] *= np.random.binomial(1, p)
         
     elif method == 'Binomial':
+        
         data_c[x[ind], y[ind]] = np.random.binomial(data_c[x[ind], y[ind]].astype(np.int), p)
         
     else:
         raise ValueError('''Method can be one of "Uniform" or "Binomial"''') 
     # to be developed
     
-    return data_c, x, y, ind
+    return data_c.astype(np.float32), x, y, ind
 
 def Eval_Imputation (data, data_imp, x, y, ind):
     

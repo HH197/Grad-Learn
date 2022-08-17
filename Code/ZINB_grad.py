@@ -128,7 +128,7 @@ class ZINB_WaVE(nn.Module):
         self.mu = torch.exp(self.log_mu)
         self.theta = torch.exp(self.log_theta)
         
-        # if you make them double (float64) it will use the memory exponantially 
+        # Adaptive regulatory parameters are applied: 
         p = self.mu/(self.mu + self.theta + 1e-4 + 1e-4*self.mu + 1e-4*self.theta)
         
         return p
@@ -172,8 +172,8 @@ def train_ZINB(x, optimizer, model, epochs = 300):
       neg_log_lik, pen = model._loss(batch, p)
       loss = neg_log_lik + pen
 
-      losses.append(loss.detach().numpy())
-      neg_log_liks.append(neg_log_lik.detach().numpy())
+      losses.append(loss.item())
+      neg_log_liks.append(neg_log_lik.item())
       
       if i%50 == 1:
         print(f'epoch: {i:3}  loss: {loss.item():10.2f}')

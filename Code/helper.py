@@ -7,13 +7,14 @@ Created on Sat Jun 18 15:19:08 2022
 
 This will contain all of the helper functions. 
 """
-
+import numpy as np
 import seaborn as sn
 from sklearn import metrics
 from sklearn.cluster import KMeans
 from matplotlib import pyplot as plt
 from pandas import DataFrame
-import numpy as np
+from sklearn.neighbors import NearestNeighbors
+import scipy.sparse
 
 
 def kmeans(data, kmeans_kwargs = {"init": "random", 
@@ -179,7 +180,77 @@ def Eval_Imputation (data, data_imp, x, y, ind):
     
     return L1
     
+
+def entropy_batch_mixing(latent_space, 
+                         batches, 
+                         K = 50, 
+                         n_jobs = 8, 
+                         n = 100, 
+                         n_iter = 50):
     
+    '''
+    Adopted from:
+    
+    1) Haghverdi L, Lun ATL, Morgan MD, Marioni JC. Batch effects in
+    single-cell RNA-sequencing data are corrected by matching mutual nearest 
+    neighbors. Nat Biotechnol. 2018 Jun;36(5):421-427. doi: 10.1038/nbt.4091. 
+    
+    2) Lopez R, Regier J, Cole MB, Jordan MI, Yosef N. Deep generative 
+    modeling for single-cell transcriptomics. Nat Methods. 
+    2018 Dec;15(12):1053-1058. doi: 10.1038/s41592-018-0229-2. 
+    
+    This function will choose n cells from batches, finds K nearest neighbors
+    of each randomly chosen cell, and calculates the average regional entropy
+    of all n cells. 
+    
+    The procedure is repeated for n_iter iterations. Finally, the average of the 
+    iterations is returned as the final batch mixing score. 
+    
+    Parameters
+    ----------
+    latent_space : numpy ndarray 
+        The latent space matrix.
+        
+    batches : a numpy array or a list
+        The batch number of each sample in the latent space matrix.
+        
+    K : int
+        Number of nearest neighbors. 
+    
+    n_jobs : int
+        Number of jobs. Please visit scikit-learn documentation for more info. 
+    
+    n : int
+        Number of cells to be chosen randomly. 
+    
+    n_iter : int
+        Number of iterations to randomly choosing n cells.
+    
+    Returns
+    -------
+    L1 : float <= 1 
+        The batch mixing score; the higher, the better.
+    
+    '''
+    
+    n_samples = latent_space.shape[0]
+    nne = NearestNeighbors(n_neighbors=K+1, n_jobs=n_jobs)
+    nne.fit(latent_space)
+    kmatrix = nne.kneighbors_graph(latent_space) - scipy.sparse.identity(n_samples)
+    
+    ind = np.random.choice(n_samples, size=n)
+    inds = kmatrix[ind].nonzero()[1].reshape(n, K)
+    
+    score = 0
+    
+    for t in range(n_iter):
+        score += np.mean([entropy(batches[inds[i]])\
+                          for i in range(n)])
+    score = score/n_iter
+    
+    return score
+
+
     
     
     

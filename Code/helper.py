@@ -180,6 +180,21 @@ def Eval_Imputation (data, data_imp, x, y, ind):
     
     return L1
     
+def entropy(batches):
+    
+    '''
+    To be added!
+    '''    
+    n_batches, frq = np.unique(batches, return_counts=True)
+    n_batches = len(n_batches)
+    frq = frq/np.sum(frq)
+    
+    # if frequency == 0 or frequency == 1:
+    #     return 0
+    
+    return -np.sum(frq*np.log(frq))
+
+
 
 def entropy_batch_mixing(latent_space, 
                          batches, 

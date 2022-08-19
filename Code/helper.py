@@ -179,11 +179,31 @@ def Eval_Imputation (data, data_imp, x, y, ind):
     L1 = np.median(np.abs(data[x[ind], y[ind]] - data_imp[x[ind], y[ind]]))
     
     return L1
-    
+
+
+
 def entropy(batches):
     
     '''
-    To be added!
+    Calculates the entropy.
+    
+    Entropy of mixing for c different batches is defined as: 
+        
+        $$E = \sum_{i=1}^c x_i \log x_i$$
+    
+    where $x_i$ is the proportion of cells from batch i in a given region, such
+    that $\sum_{i=1}^c x_i = 1$. 
+    
+    Parameters
+    ----------
+    batches : numpy array or list
+        The batches in the region.
+    
+    Returns
+    -------
+    entropy : float
+        Entropy of mixing.
+    
     '''    
     n_batches, frq = np.unique(batches, return_counts=True)
     n_batches = len(n_batches)
@@ -214,11 +234,11 @@ def entropy_batch_mixing(latent_space,
     modeling for single-cell transcriptomics. Nat Methods. 
     2018 Dec;15(12):1053-1058. doi: 10.1038/s41592-018-0229-2. 
     
-    This function will choose n cells from batches, finds K nearest neighbors
+    This function will choose `n` cells from batches, finds `K` nearest neighbors
     of each randomly chosen cell, and calculates the average regional entropy
-    of all n cells. 
+    of all `n` cells. 
     
-    The procedure is repeated for n_iter iterations. Finally, the average of the 
+    The procedure is repeated for `n_iter` iterations. Finally, the average of the 
     iterations is returned as the final batch mixing score. 
     
     Parameters
@@ -243,7 +263,7 @@ def entropy_batch_mixing(latent_space,
     
     Returns
     -------
-    L1 : float <= 1 
+    score : float <= 1 
         The batch mixing score; the higher, the better.
     
     '''

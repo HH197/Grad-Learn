@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 '''
-This code will do the necessary preprocessing steps on the Mouse Cortex and Brain Large data sets.
+This code will do the necessary preprocessing steps on RNA-seq single-cell datasets.
 
 '''
 
@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 import torch
 import h5py
+import loompy
 
 from scipy.sparse import csc_matrix
 # from scipy.sparse import vstack
@@ -204,9 +205,7 @@ class Brain_Large(Dataset):
         matrix_batch = torch.tensor(matrix_batch, dtype=torch.float32)
         return matrix_batch, index
 
-
-
-class Brain_Large_Sampler(Sampler):
+class Indice_Sampler(Sampler):
     
     '''
     This is a sampler for Pytorch ``DataLoader`` in which it will sample from the 
@@ -244,8 +243,81 @@ class Brain_Large_Sampler(Sampler):
         return len(self.mask)
 
 
-
+class RETINA(Dataset):
+    
+    '''
+    The Dataset class with necessary pre-processing steps for the RETINA dataset. 
+    
+    The data provided by Lopez et al. (scvi) is used which can be 
+    downloaded from: https://github.com/YosefLab/scVI-data/raw/master/retina.loom
+    The data is in loompy format (http://linnarssonlab.org/loompy/index.html)
+    
+    The original dataset is available under the GEO accession number GSE81904.
+    https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE81904
+    
+    The webpage consists of the raw matrix, BAM files, Rdata files, and R code. 
+    To perform the pre-processing steps and analyses of the original paper, 
+    one can use the following github repository: 
+        https://github.com/broadinstitute/BipolarCell2016
+    
+    
+    Note: 
+        Since the data is not very large (approximately 2GB in memory), the class will
+        load the whole data into memory.
+    
+    
+    Attributes
+    ----------
+    file_dir : str
+        The directory of the HDF5 file.
+        
+    n_genes : int 
+        Total number of genes in the data set.
+    
+    n_cells : int
+        Total number of cells.
+    
+    batchID : ndarray
+        One dimensional array of the Batch Ids of cells.
+    
+    cluster : ndarray
+        One dimensional array of the assigned cluster numbers by the authors of 
+        the original paper.
+     '''
+    def __init__(self, 
+                 file_dir = "/home/longlab/Data/Thesis/Data/retina.loom"):
+        
+        '''
+        Initialize the RETINA Dataset class.
+        
+        It seperates the raw count data, the cluster numbers, and batches. 
+        
+        Parameters
+        ----------
+        file_dir: str 
+            The directory of the HDF5 file which should be provided by the user.
             
+        '''
+        
+        self.file_dir = file_dir
+        
+        with loompy.connect(self.file_dir) as ds:
+            
+            self.data = torch.from_numpy(ds[:,:].T).float()
+            self.n_genes, self.n_cells = ds.shape
+            self.batchID = ds.ca['BatchID'].ravel()
+            self.cluster = ds.ca['ClusterID'].ravel()
+            
+    def __len__(self):
+        return self.n_cells
+        
+    def __getitem__(self, index):
+        
+        matrix_batch = self.data[index]
+        return matrix_batch, index
+
+
+      
 #     Another thing is that we will not have enough memory to train the zinb on big datasets
 #     I think we should do it based on batches => how to do it? have a fixed big matrix 
 #     and then train for a portion of that matrix? 

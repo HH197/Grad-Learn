@@ -16,6 +16,7 @@ from pandas import DataFrame
 from sklearn.neighbors import NearestNeighbors
 import scipy.sparse
 from sklearn.manifold import TSNE
+from sklearn.cluster import AgglomerativeClustering
 
 def kmeans(data, kmeans_kwargs = {"init": "random", 
                                    "n_init": 50, 
@@ -338,4 +339,70 @@ def plot_tSNE(latent,
     
     return latent
       
+
+def HC(latent, 
+        labels, 
+        num_clusters = [2, 3, 4, 7]):
     
+    '''
+    Given a `latent` space and class labels, the function will perform hierarchical 
+    clustering (HC) on the latent space and calculate the NMI score.
+    
+    
+    Parameters
+    ----------
+    latent_space : numpy ndarray 
+        The latent space matrix.
+        
+    labels : a numpy array or a list
+        The batch (or cluster) number of each sample in the latent space matrix.
+        
+    num_clusters : list
+        A list of the number of cluusters to perform the HC.
+
+    
+    Returns
+    -------
+    nmis : list
+        The NMI score of each number of clusters.
+    
+    '''
+    
+    nmis = []
+    
+    for i in num_clusters: 
+
+        new_labels = labels if i == 7 else np.zeros_like(labels)
+        
+        if i == 2:
+            for t in np.arange(labels.shape[0]):
+                new_labels[t] = 1 if labels[t] in [2, 6, 5] else 0
+        
+        if i == 3:
+            for t in np.arange(labels.shape[0]):
+                if labels[t] in [2, 6, 5]:
+                    new_labels[t] = 2
+                elif labels[t] in [1, 3]: 
+                    new_labels[t] = 1
+                else:
+                    new_labels[t] = 0
+                    
+        if i == 4:
+            for t in np.arange(labels.shape[0]):
+                if labels[t] in [2, 6, 5]:
+                    new_labels[t] = 3
+                elif labels[t] in [1, 3]: 
+                    new_labels[t] = 2
+                elif labels[t] in [0]:
+                    new_labels[t] = 1
+                else:
+                    new_labels[t] = 0
+        
+        
+            
+        hc = AgglomerativeClustering(n_clusters = i).fit(latent)
+        nmi = metrics.cluster.normalized_mutual_info_score(new_labels,
+                                                     hc.labels_)
+        nmis.append(nmi)
+        
+    return nmis

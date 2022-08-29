@@ -15,7 +15,7 @@ from matplotlib import pyplot as plt
 from pandas import DataFrame
 from sklearn.neighbors import NearestNeighbors
 import scipy.sparse
-
+from sklearn.manifold import TSNE
 
 def kmeans(data, kmeans_kwargs = {"init": "random", 
                                    "n_init": 50, 
@@ -286,8 +286,56 @@ def entropy_batch_mixing(latent_space,
     return score
 
 
+def plot_tSNE(latent, 
+              labels, 
+              cmap = plt.get_cmap("tab10", 7), 
+              perform_tsne = True):
+    
+    '''
+    Adoptd from:
+    
+    Lopez R, Regier J, Cole MB, Jordan MI, Yosef N. Deep generative 
+    modeling for single-cell transcriptomics. Nat Methods. 
+    2018 Dec;15(12):1053-1058. doi: 10.1038/s41592-018-0229-2. 
+    
+    Given a `latent` space and class labels, the function will calculate the 
+    tSNE of the latent space and make a graph of the tSNE latent space using
+    the classes.
     
     
+    Parameters
+    ----------
+    latent_space : numpy ndarray 
+        The latent space matrix.
+        
+    labels : a numpy array or a list
+        The batch (or cluster) number of each sample in the latent space matrix.
+        
+    cmap : pylot instance
+        a colormap instance (see Matplotlib doc for more info).
+    
+    perform_tsne : Boolean
+        If `True` the function will perform the tSNE. Otherwise, tSNE will not
+        be performed on the latent space.
     
     
+    Returns
+    -------
+    latent : numpy ndarray
+        The latent space of the tSNE.
+    
+    '''
+    
+    if perform_tsne:
+        latent = TSNE().fit_transform(latent)
+    
+    
+    plt.figure(figsize=(10, 10))
+    plt.scatter(latent[:, 0], latent[:, 1], c=labels, \
+                                   cmap=cmap, edgecolors='none')
+    plt.axis("off")
+    plt.tight_layout()
+    
+    return latent
+      
     

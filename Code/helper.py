@@ -190,7 +190,7 @@ def entropy(batches):
     
     Entropy of mixing for c different batches is defined as: 
         
-        $$E = \sum_{i=1}^c x_i \log x_i$$
+        $$E = - \sum_{i=1}^c x_i \log x_i$$
     
     where $x_i$ is the proportion of cells from batch i in a given region, such
     that $\sum_{i=1}^c x_i = 1$. 

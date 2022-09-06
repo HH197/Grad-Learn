@@ -17,78 +17,87 @@ from torch.utils.data import Dataset
 from torch.utils.data import Sampler
 
 
-def Zeisel_data(file_dir= "/home/longlab/Data/Thesis/Data/expression_mRNA_17-Aug-2014.txt", 
-           n_genes = 558):
-    
-    '''
-    
-    This function will perform the pre-processing steps for the gold standard Zeisel data set. 
-    
-    This steps are: 
-    1. exctracting the labels of the cell types from the data
-    2. choosing the genes that are transcribed in more than 25 cells 
-    3. Selecting the 558 genes with the highest Variance in the remaining genes from the previous step
-    4. Performing random permutation of the genes 
-    
-    Parameters
-    ----------
-    file_dir : str 
-        The path to the .csv file.
-        
-    n_genes : int 
-        Number of the high variable genes that should be selected.
-    
-    Returns
-    -------
-    y : Pytorch ndarray
-        The permuted dataset with n_genes and 3005 cells
-    
-    labels : str
-        The true labels (cell types)
-    
-    '''
-    
-    np.random.seed(197)
-    
-    df = pd.read_csv(file_dir, delimiter= '\t', low_memory=False)
-    # Groups of cells, i.e. labels
-    Groups = df.iloc[7,]
-    # print(Groups.value_counts())
-    Groups = Groups.values[2:]
-    _ , labels = np.unique(Groups, return_inverse=True)
-    
-    df1 = df.iloc[10:].copy()
-    df1.drop(['tissue', 'Unnamed: 0'], inplace=True, axis=1)
-    df1 = df1.astype(float)
-    
-    rows = np.count_nonzero(df1, axis=1) > 0 # choosing genes that are transcribed in more than 25 cells
-    df1 = df1[np.ndarray.tolist(rows)]
-    # df2 += 1
-    data = df1.values
-    # data = np.log10(data)  # log transforming the data
-    
-    # permutation
-    # selecting the number of genes, i.e. number of features
-    
-    # sorting the data based on the variance
-    rows = np.argsort(np.var(data, axis = 1)*-1) 
-    data = data[rows,:]
-    data = data[0:n_genes, :] # choosing high variable genes 
-    
-    p = np.random.permutation(data.shape[0])
-    data[:,:] = data[p,:]
-    
-    p = np.random.permutation(data.shape[1])
-    data[:,:] = data[:,p]
-    
-    labels = labels[p]
-    
-    y = data.T #whole data set
-    y = torch.from_numpy(y)
-    
-    
 
-    return y, labels
+class CORTEX(Dataset):
+    
+    ''' 
+    The Dataset class with necessary pre-processing steps for the gold standard
+    Zeisel data set.
+    
+    '''
+    
+    def __init__ (self, 
+                  file_dir= "/home/longlab/Data/Thesis/Data/expression_mRNA_17-Aug-2014.txt", 
+                  n_genes = 558):
+    
+        '''
+        
+        Performs the pre-processing steps which are:
+        
+        1. exctracting the labels of the cell types from the data
+        2. choosing the genes that are transcribed in more than 25 cells 
+        3. Selecting the 558 genes with the highest Variance in the remaining genes from the previous step
+        4. Performing random permutation of the genes 
+        
+        Attributes
+        ----------
+        file_dir : str 
+            The path to the .csv file.
+        n_genes : int 
+            Number of the high variable genes that should be selected.
+        n_cells
+            Total number of cells.
+        data: torch Tensor
+            The data.
+        labels: torch Tensor
+            The labels.
+        '''
+        
+        self.file_dir = file_dir
+        self.n_genes = n_genes
+        
+        df = pd.read_csv(self.file_dir, delimiter= '\t', low_memory=False)
+        
+        # Groups of cells, i.e. labels
+        Groups = df.iloc[7,]
+        
+        Groups = Groups.values[2:]
+        _ , labels = np.unique(Groups, return_inverse=True)
+        
+        df1 = df.iloc[10:].copy()
+        df1.drop(['tissue', 'Unnamed: 0'], inplace=True, axis=1)
+        df1 = df1.astype(float)
+        
+        # choosing genes that are transcribed in more than 25 cells
+        rows = np.count_nonzero(df1, axis=1) > 0 
+        df1 = df1[np.ndarray.tolist(rows)]
+        
+        data = df1.values
+        
+        # sorting the data based on the variance
+        rows = np.argsort(np.var(data, axis = 1)*-1) 
+        data = data[rows,:]
+        data = data[0:self.n_genes, :] # choosing high variable genes 
+        
+        p = np.random.permutation(data.shape[0])
+        data = data[p,:]
+        
+        p = np.random.permutation(data.shape[1])
+        data = data[:,p]
+        
+        labels = labels[p]
+        
+        y = data.T #whole data set
+        
+        self.n_cells = y.shape[0]
+        self.data = torch.from_numpy(y)
+        self.labels = torch.tensor(labels)
+        
+    def __len__(self):
+        return self.n_cells
+    
+    def __getitem__ (self, index):
+        return self.data[index], self.labels[index]
 
 
 class Brain_Large(Dataset):

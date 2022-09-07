@@ -157,7 +157,43 @@ class ZINB_WaVE(nn.Module):
 
 
 
-def train_ZINB(x, optimizer, model, epochs = 300):
+def train_ZINB(x, optimizer, model, epochs = 300, val = False):
+    
+    losses = []
+    neg_log_liks = []
+    
+    for i in range(epochs):
+
+      i += 1 
+      batch = x
+    
+      p = model(batch)
+      
+      neg_log_lik, pen = model._loss(batch, p)
+      loss = neg_log_lik + pen
+
+      losses.append(loss.item())
+      neg_log_liks.append(neg_log_lik.item())
+      
+      if i%50 == 1:
+        if val:
+            print(f'validation epoch: {i:3}  loss: {loss.item():10.2f}') 
+        else:
+            print(f'epoch: {i:3}  loss: {loss.item():10.2f}') 
+      
+      optimizer.zero_grad()
+      loss.backward()
+      optimizer.step()
+    
+    if val:
+        print(f'validation epoch: {i:3}  loss: {loss.item():10.2f}') 
+    else:
+        print(f'epoch: {i:3}  loss: {loss.item():10.2f}') # print the last line
+    
+    
+    return losses, neg_log_liks
+
+def train_ZINB_early_stopping(x, val_data, optimizer, model, epochs = 300):
     
     losses = []
     neg_log_liks = []
@@ -177,6 +213,9 @@ def train_ZINB(x, optimizer, model, epochs = 300):
       
       if i%50 == 1:
         print(f'epoch: {i:3}  loss: {loss.item():10.2f}')
+        
+        
+        val_ZINB(val_data, model, epochs = 50)
       
       optimizer.zero_grad()
       loss.backward()
@@ -186,29 +225,33 @@ def train_ZINB(x, optimizer, model, epochs = 300):
     
     return losses, neg_log_liks
 
-
-def val_ZINB(val_data, model, optimizer, epochs = 300): 
+def val_ZINB(val_data, model, epochs = 100): 
     
 
     """ 
-    The parameters in params would be the same during the validation process 
-    However, the W, and gammas would change because their dimension depend on 
-    the number of samples, which will change with validation and test sets
+    The following parameters would be the same during the validation process: 
+        `log_theta`, `beta_mu, `beta_pi`, `alpha_mu`, and `alpha_pi`.
+    
+    However, the `W`, `gamma_mu`, and `gamma_pi` would change because their 
+    dimension depend on the number of samples (They are sample specific), 
+    which will change with validation.
     
     """
 
-    params = ['log_theta', 'beta_mu', 'beta_pi', 'alpha_mu', 'alpha_pi']
-    
-    for name, param in model.named_parameters():
-        if name in params:
-            param.requires_grad = False
-    
-    model2 = ZINB_WaVE(Y = val_data, K = model.K)
-    
-    for name in params: 
-        setattr(model2, name, getattr(model, name))
-    
-    losses, neg_log_liks  = train_ZINB(val_data, optimizer, model2, epochs = epochs)
+    model_val = ZINB_WaVE(Y = val_data,
+                       K = model.K,
+                       alpha_mu = model.alpha_mu.detach(),
+                       alpha_pi = model.alpha_pi.detach(),
+                       beta_mu = model.beta_mu.detach(),
+                       beta_pi = model.beta_pi.detach(),
+                       log_theta = model.log_theta.detach())
+
+        
+    optimizer = torch.optim.Adam(model_val.parameters(), lr = 0.1)
+    losses, neg_log_liks  = train_ZINB(val_data, 
+                                       optimizer, 
+                                       model_val, 
+                                       epochs = epochs, val = True)
     
     return neg_log_liks[-1]
 

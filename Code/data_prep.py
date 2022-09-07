@@ -79,13 +79,14 @@ class CORTEX(Dataset):
         data = data[rows,:]
         data = data[0:self.n_genes, :] # choosing high variable genes 
         
+        np.random.seed(197)
         p = np.random.permutation(data.shape[0])
         data = data[p,:]
         
-        p = np.random.permutation(data.shape[1])
-        data = data[:,p]
+        # p = np.random.permutation(data.shape[1])
+        # data = data[:,p]
         
-        labels = labels[p]
+        # labels = labels[p]
         
         y = data.T #whole data set
         

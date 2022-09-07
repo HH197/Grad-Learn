@@ -79,16 +79,12 @@ class CORTEX(Dataset):
         data = data[rows,:]
         data = data[0:self.n_genes, :] # choosing high variable genes 
         
+        #permutation on features (they were sorted)
         np.random.seed(197)
         p = np.random.permutation(data.shape[0])
         data = data[p,:]
         
-        # p = np.random.permutation(data.shape[1])
-        # data = data[:,p]
-        
-        # labels = labels[p]
-        
-        y = data.T #whole data set
+        y = data.T
         
         self.n_cells = y.shape[0]
         self.data = torch.from_numpy(y)

@@ -193,10 +193,19 @@ def train_ZINB(x, optimizer, model, epochs = 300, val = False):
     
     return losses, neg_log_liks
 
-def train_ZINB_early_stopping(x, val_data, optimizer, model, epochs = 300):
+def train_ZINB_early_stopping(x,
+                              val_data, 
+                              optimizer, 
+                              model, 
+                              epochs = 300, 
+                              PATH = '/home/longlab/Data/Thesis/Data/'):
     
     losses = []
     neg_log_liks = []
+    val_losses = []
+    
+    val_loss, _ = val_ZINB(val_data, model, epochs = 20)
+    val_losses.append(val_loss)
     
     for i in range(epochs):
 
@@ -210,20 +219,31 @@ def train_ZINB_early_stopping(x, val_data, optimizer, model, epochs = 300):
 
       losses.append(loss.item())
       neg_log_liks.append(neg_log_lik.item())
-      
-      if i%50 == 1:
-        print(f'epoch: {i:3}  loss: {loss.item():10.2f}')
-        
-        
-        val_ZINB(val_data, model, epochs = 50)
-      
       optimizer.zero_grad()
       loss.backward()
       optimizer.step()
-    
+      
+      if i%50 == 1:
+        print(f'epoch: {i:3}  loss: {loss.item():10.2f}')
+
+        val_loss_last, _ = val_ZINB(val_data, model, epochs = 20)
+        val_losses.append(val_loss)
+        
+        if val_loss_last <= val_loss:
+            val_loss = val_loss_last
+            
+            # save model checkpoint
+            torch.save(model.state_dict(), PATH + 'best_trained_model.pt')
+        else:
+            model.load_state_dict(torch.load(PATH + 'best_trained_model.pt'))
+            break
+
     print(f'epoch: {i:3}  loss: {loss.item():10.2f}') # print the last line
     
     return losses, neg_log_liks
+
+
+
 
 def val_ZINB(val_data, model, epochs = 100): 
     
@@ -237,7 +257,8 @@ def val_ZINB(val_data, model, epochs = 100):
     which will change with validation.
     
     """
-
+    
+    # creating a model from the original model for evaluation
     model_val = ZINB_WaVE(Y = val_data,
                        K = model.K,
                        alpha_mu = model.alpha_mu.detach(),
@@ -246,13 +267,13 @@ def val_ZINB(val_data, model, epochs = 100):
                        beta_pi = model.beta_pi.detach(),
                        log_theta = model.log_theta.detach())
 
-        
+    # Tuning the validation model parameters (W and gammas)
     optimizer = torch.optim.Adam(model_val.parameters(), lr = 0.1)
     losses, neg_log_liks  = train_ZINB(val_data, 
                                        optimizer, 
                                        model_val, 
                                        epochs = epochs, val = True)
     
-    return neg_log_liks[-1]
+    return losses[-1], neg_log_liks[-1]
 
 

@@ -156,13 +156,49 @@ class ZINB_WaVE(nn.Module):
         return -loss , pen
 
 
-def train_ZINB(x, 
-               val_data, 
-               optimizer, 
-               model, 
-               early_stop = False, 
-               epochs = 150, 
-               PATH = '/home/longlab/Data/Thesis/Data/'):
+
+def train_ZINB(x, optimizer, model, epochs = 300, val = False):
+    
+    losses = []
+    neg_log_liks = []
+    
+    for i in range(epochs):
+
+      i += 1 
+      batch = x
+    
+      p = model(batch)
+      
+      neg_log_lik, pen = model._loss(batch, p)
+      loss = neg_log_lik + pen
+
+      losses.append(loss.item())
+      neg_log_liks.append(neg_log_lik.item())
+      
+      if i%50 == 1:
+        if val:
+            print(f'validation epoch: {i:3}  loss: {loss.item():10.2f}') 
+        else:
+            print(f'epoch: {i:3}  loss: {loss.item():10.2f}') 
+      
+      optimizer.zero_grad()
+      loss.backward()
+      optimizer.step()
+    
+    if val:
+        print(f'validation epoch: {i:3}  loss: {loss.item():10.2f}') 
+    else:
+        print(f'epoch: {i:3}  loss: {loss.item():10.2f}') # print the last line
+    
+    
+    return losses, neg_log_liks
+
+def train_ZINB_early_stopping(x,
+                              val_data, 
+                              optimizer, 
+                              model, 
+                              epochs = 300, 
+                              PATH = '/home/longlab/Data/Thesis/Data/'):
     
     losses = []
     neg_log_liks = []
@@ -199,11 +235,8 @@ def train_ZINB(x,
             # save model checkpoint
             torch.save(model.state_dict(), PATH + 'best_trained_model.pt')
         else:
-            
-            if early_stop: 
-                model.load_state_dict(torch.load(PATH + 'best_trained_model.pt'))
-                
-                break
+            model.load_state_dict(torch.load(PATH + 'best_trained_model.pt'))
+            break
 
     print(f'epoch: {i:3}  loss: {loss.item():10.2f}') # print the last line
     

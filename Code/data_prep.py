@@ -131,18 +131,23 @@ class Brain_Large(Dataset):
         The directory of the HDF5 file
     n_select_genes : int
         Number of high variable genes to be selected in the pre-processing step.
-    n_genes 
+    n_genes : int
         Total number of genes in the data set
-    n_cells
+    n_cells : int
         Total number of cells
-    selected_genes
+    selected_genes : ndarray
         The indices of selected high variable genes.
-
+    low_memory : boolean
+        Whether perform data loading with memory efficiency or not.
+    data : pytorch tensor
+        If `low_memory` is False, the whole data.
+        
      '''
     def __init__(self, 
                  file_dir = "/home/longlab/Data/Thesis/Data/1M_neurons_filtered_gene_bc_matrices_h5.h5",
                  n_sub_samples = 10**5, 
-                 n_select_genes = 720):
+                 n_select_genes = 720, 
+                 low_memory = True):
         
         '''
         Initialize the Brain_Large Dataset class
@@ -158,14 +163,18 @@ class Brain_Large(Dataset):
             
         n_sub_samples: int
             Number of samples (cells) in the downsampled matrix. Default: 10^5
-        n_select_genes
-            Number of the high variable genes to be selected in the pre-processing step. Default: 750
+        n_select_genes: int
+            Number of the high variable genes to be selected in the pre-processing
+            step. Default: 750
+        low_memory: Boolean
+            If `False`, the whole data will be loaded into memory (high amount of
+            memory required); `True` by default.
         
         '''
         
         self.file_dir = file_dir
         self.n_select_genes = n_select_genes
-        
+        self.low_memory = low_memory
         with h5py.File(self.file_dir, 'r') as f:
             
             data = f['mm10']
@@ -186,31 +195,49 @@ class Brain_Large(Dataset):
             
             # choosing high variable genes
             self.selected_genes = np.argsort(scale.var_*-1)[:self.n_select_genes]
+        
+        if low_memory == False: 
             
+            print('Loading the whole dataset')
+            with h5py.File(self.file_dir, 'r') as f:
+            
+                data = f['mm10']
+                
+                matrix = csc_matrix((data['data'], 
+                                 data['indices'], 
+                                 data['indptr']),
+                                shape=data['shape'])
+                matrix = matrix[self.selected_genes, :].T.A
+            self.data = torch.tensor(matrix, dtype=torch.float32)
+                
     def __len__(self):
         return self.n_cells
         
     def __getitem__(self, index):
         
-        with h5py.File(self.file_dir, 'r') as f:
+        if self.low_memory:
+                
+            with h5py.File(self.file_dir, 'r') as f:
+                
+                data = f['mm10']
+                
+                # try to initalize the data in init and then use data in the getitem? 
+                
+                indptr_sub_samp = data['indptr'][index:(index+1)+1]
+                first_indx = indptr_sub_samp[0]
+                last_indx = indptr_sub_samp[-1]
+                indptr_sub_samp = (indptr_sub_samp - first_indx).astype(np.int32)
+                matrix_batch = csc_matrix((data['data'][first_indx:last_indx], 
+                                 data['indices'][first_indx:last_indx], 
+                                 indptr_sub_samp),
+                                shape=(self.n_genes,1))
             
-            data = f['mm10']
-            
-            # try to initalize the data in init and then use data in the getitem? 
-            
-            indptr_sub_samp = data['indptr'][index:(index+1)+1]
-            first_indx = indptr_sub_samp[0]
-            last_indx = indptr_sub_samp[-1]
-            indptr_sub_samp = (indptr_sub_samp - first_indx).astype(np.int32)
-            matrix_batch = csc_matrix((data['data'][first_indx:last_indx], 
-                             data['indices'][first_indx:last_indx], 
-                             indptr_sub_samp),
-                            shape=(self.n_genes,1))
+            matrix_batch = matrix_batch.toarray().T[:, self.selected_genes]
+            matrix_batch = torch.tensor(matrix_batch, dtype=torch.float32)
+            return matrix_batch, index
+        else:
+            return self.data[index], index
         
-        matrix_batch = matrix_batch.toarray().T[:, self.selected_genes]
-        matrix_batch = torch.tensor(matrix_batch, dtype=torch.float32)
-        return matrix_batch, index
-
 class Indice_Sampler(Sampler):
     
     '''

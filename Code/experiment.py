@@ -3,15 +3,19 @@ The script to perform the experiments on the Brain Large dataset
 @author: HH197
 """
 
+import sys
+import os
+import time
+
+PATH = '/home/longlab/Desktop' # from the user
+
+sys.path.append(PATH+'/Code')
+
 import ZINB_grad 
 import torch
 import data_prep
 from torch.utils.data import DataLoader, random_split
-import os
-import time
 
-
-PATH = '/home/longlab/Desktop' # from the user
 
 data_sizes = [4000, 10000, 15000, 30000, 50000, 100000, 1000000]
 K = 10
@@ -57,7 +61,7 @@ for j in data_sizes:
 
         for i, data in enumerate(brain_dl):
             
-            batch = data[0].reshape(size).to(device)
+            batch = data[0].reshape((-1, brain.n_select_genes)).to(device)
             
             
             # Using the alphas, betas, and theta from the previous model.
@@ -84,11 +88,15 @@ for j in data_sizes:
             # save the W and gammas of the trained model
             W_gammas = {key: model.state_dict()[key] for key in ['gamma_mu', 'gamma_pi', 'W']}
             torch.save(W_gammas, PATH + f"/data_size_{j}/W_gammas_iter_{i}.pt")
+            torch.save(torch.tensor(losses),PATH +\
+                       f"/data_size_{j}/phase_1_losses_iter_{i}.pt")
+            torch.save(torch.tensor(val_losses),PATH + \
+                       f"/data_size_{j}/phase_1_val_losses_iter_{i}.pt")
         
         
         for i, data in enumerate(brain_dl):
             
-            batch = data[0].reshape(size).to(device)
+            batch = data[0].reshape((-1, brain.n_select_genes)).to(device)
             
             # Reading the W and Gammas
             W_gammas = torch.load(PATH + f"/data_size_{j}/W_gammas_iter_{i}.pt")
@@ -119,29 +127,48 @@ for j in data_sizes:
             W_gammas = {key: model2.state_dict()[key] for key in ['gamma_mu',
                                                                   'gamma_pi',
                                                                   'W']}
-            torch.save(W_gammas,PATH + f"/data_size_{j}/W_gammas_iter_{i}.pt")
+            torch.save(W_gammas,PATH + \
+                       f"/data_size_{j}/W_gammas_iter_{i}.pt")
+            torch.save(torch.tensor(losses),PATH +\
+                       f"/data_size_{j}/phase_2_losses_iter_{i}.pt")
+            torch.save(torch.tensor(val_losses),PATH + \
+                       f"/data_size_{j}/phase_2_val_losses_iter_{i}.pt")
+        
 
     else: 
 
-        y, _ = train[:i]
-        y_train, y_val = random_split(y, [i-val_size, val_size])
-        y_train, y_val = y_train.to(device), y_val.to(device)
+        y, _ = train[:j]
+        y_train, y_val = random_split(y, [j-val_size, val_size])
+        y_train, y_val = y_train[:].to(device), y_val[:].to(device)
         
         model = ZINB_grad.ZINB_WaVE(Y = y_train, K = K)
         model.to(device)
         
         optimizer = torch.optim.Adam(model.parameters(), lr = 0.08)
-        losses, neg_log_liks = ZINB_grad.train_ZINB_with_val(y_train, 
+        losses, neg_log_liks, val_losses = ZINB_grad.train_ZINB_with_val(y_train, 
                                                                  y_val, 
                                                                  optimizer, 
                                                                  model,
                                                                  device,
                                                                  PATH = PATH + f'/data_size_{j}/')
+        model.load_state_dict(torch.load(PATH + \
+                                         f'/data_size_{j}/' \
+                                             + 'best_trained_model.pt'))
+        W_gammas = {key: model.state_dict()[key] for key in ['gamma_mu',
+                                                              'gamma_pi',
+                                                              'W']}
+        
+        torch.save(W_gammas,PATH + f"/data_size_{j}/W_gammas.pt")
+        torch.save(torch.tensor(losses),PATH + \
+                   f"/data_size_{j}/losses.pt")
+        torch.save(torch.tensor(val_losses),PATH +\
+                   f"/data_size_{j}/val_losses.pt")
+        
     wall_time = time.time() - start_time
 
-    with open("myfile.txt", "w") as f:
+    with open(PATH + f"/data_size_{j}/run_time.txt", "w") as f:
         # Writing time to a file:
-        f.write(f'{print(device)} wall time is {wall_time}')
+        f.write(device.type + f' wall time is: {wall_time}')
     
     
     

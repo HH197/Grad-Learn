@@ -10,8 +10,7 @@ import torch
 import h5py
 import loompy
 
-from scipy.sparse import csc_matrix
-# from scipy.sparse import vstack
+from scipy.sparse import csc_matrix, csr_matrix, vstack
 from sklearn.preprocessing import StandardScaler
 from torch.utils.data import Dataset
 from torch.utils.data import Sampler
@@ -139,8 +138,8 @@ class Brain_Large(Dataset):
         The indices of selected high variable genes.
     low_memory : boolean
         Whether perform data loading with memory efficiency or not.
-    data : pytorch tensor
-        If `low_memory` is False, the whole data.
+    matrix : scipy csc_matrix
+        If `low_memory` is False, the whole data otherwise `None`.
         
      '''
     def __init__(self, 
@@ -198,17 +197,44 @@ class Brain_Large(Dataset):
         
         if low_memory == False: 
             
+            del sub_sampled, scale, indptr_sub_samp
             print('Loading the whole dataset')
-            with h5py.File(self.file_dir, 'r') as f:
             
-                data = f['mm10']
+            
+            n_iters = int(self.n_cells / 10**5) + (self.n_cells % 10**5 > 0)
+            
+            with h5py.File(self.file_dir, 'r') as f:
                 
-                matrix = csc_matrix((data['data'], 
-                                 data['indices'], 
-                                 data['indptr']),
-                                shape=data['shape'])
-                matrix = matrix[self.selected_genes, :].T.A
-            self.data = torch.tensor(matrix, dtype=torch.float32)
+                data = f['mm10']
+                index_partitioner = data["indptr"][...]
+                
+                # The following code is from the scvi package
+                for i in range(n_iters):
+                    print(f"Reading batch {i+1}")
+                    index_partitioner_batch = index_partitioner[
+                        (i * 10**5) : ((1 + i) * 10**5 + 1)]
+                    first_index_batch = index_partitioner_batch[0]
+                    last_index_batch = index_partitioner_batch[-1]
+                    index_partitioner_batch = (index_partitioner_batch - first_index_batch).astype(np.int32)
+                    n_cells_batch = len(index_partitioner_batch) - 1
+                    data_batch = data["data"][first_index_batch:last_index_batch].astype(
+                        np.float32)
+                    indices_batch = data["indices"][first_index_batch:last_index_batch].astype(
+                        np.int32)
+                    matrix_batch = csr_matrix(
+                        (data_batch, indices_batch, index_partitioner_batch),
+                        shape=(n_cells_batch, self.n_genes),
+                    )[:, self.selected_genes]
+                    # stack on the fly to limit RAM usage
+                    if i == 0:
+                        matrix = matrix_batch
+                    else:
+                        matrix = vstack([matrix, matrix_batch])
+                self.matrix = matrix
+
+        else: 
+            self.matrix = None
+
                 
     def __len__(self):
         return self.n_cells
@@ -236,7 +262,7 @@ class Brain_Large(Dataset):
             matrix_batch = torch.tensor(matrix_batch, dtype=torch.float32)
             return matrix_batch, index
         else:
-            return self.data[index], index
+            return torch.tensor(self.matrix[index].A, dtype=torch.float32), index
         
 class Indice_Sampler(Sampler):
     

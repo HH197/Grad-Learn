@@ -196,7 +196,8 @@ def train_ZINB(x, optimizer, model, epochs = 150, val = False):
 def train_ZINB_with_val(x,
                         val_data, 
                         optimizer, 
-                        model, 
+                        model,
+                        device,
                         epochs = 150, 
                         PATH = '/home/longlab/Data/Thesis/Data/', 
                         early_stop = False):
@@ -205,7 +206,7 @@ def train_ZINB_with_val(x,
     neg_log_liks = []
     val_losses = []
     
-    val_loss, _ = val_ZINB(val_data, model, epochs = 20)
+    val_loss, _ = val_ZINB(val_data, model, device)
     val_losses.append(val_loss)
     
     for i in range(epochs):
@@ -227,7 +228,7 @@ def train_ZINB_with_val(x,
       if i%50 == 1:
         print(f'epoch: {i:3}  loss: {loss.item():10.2f}')
 
-        val_loss_last, _ = val_ZINB(val_data, model, epochs = 20)
+        val_loss_last, _ = val_ZINB(val_data, model, device)
         val_losses.append(val_loss)
         
         if val_loss_last <= val_loss:
@@ -246,7 +247,7 @@ def train_ZINB_with_val(x,
 
 
 
-def val_ZINB(val_data, model, epochs = 100): 
+def val_ZINB(val_data, model, device, epochs = 20): 
     
 
     """ 
@@ -269,6 +270,7 @@ def val_ZINB(val_data, model, epochs = 100):
                        log_theta = model.log_theta.detach())
 
     # Tuning the validation model parameters (W and gammas)
+    model_val.to(device)
     optimizer = torch.optim.Adam(model_val.parameters(), lr = 0.1)
     losses, neg_log_liks  = train_ZINB(val_data, 
                                        optimizer, 

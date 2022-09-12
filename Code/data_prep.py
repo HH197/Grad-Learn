@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 import torch
 import h5py
-import loompy
+#import loompy
 
 from scipy.sparse import csc_matrix, csr_matrix, vstack
 from sklearn.preprocessing import StandardScaler

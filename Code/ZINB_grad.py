@@ -212,6 +212,9 @@ def train_ZINB_with_val(x,
     val_loss, _ = val_ZINB(val_data, model, device)
     val_losses.append(val_loss)
     
+    # to avoid error when training is not making the model any better
+    torch.save(model.state_dict(), PATH + 'best_trained_model.pt')
+    
     for i in range(epochs):
 
       i += 1 

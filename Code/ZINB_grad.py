@@ -19,6 +19,7 @@ class ZINB_WaVE(nn.Module):
 
     def __init__(self,
                  Y,
+                 device,
                  W=None,
                  alpha_mu=None,
                  alpha_pi=None,
@@ -50,7 +51,7 @@ class ZINB_WaVE(nn.Module):
             
           
         if X == None:
-            self.X = torch.ones((self.n, 1))
+            self.X = torch.ones((self.n, 1)).to(device)
             
             if beta_mu == None:
                 self.beta_mu = nn.Parameter(torch.rand((1, self.J)))
@@ -64,6 +65,7 @@ class ZINB_WaVE(nn.Module):
                 
         else: 
             _, self.M = X.size()
+            self.X = X.to(device)
             
             if beta_mu == None:
                 self.beta_mu = nn.Parameter(torch.rand(self.M,self.J))
@@ -77,7 +79,7 @@ class ZINB_WaVE(nn.Module):
             
             
         if V == None:
-            self.V = torch.ones((self.J, 1))
+            self.V = torch.ones((self.J, 1)).to(device)
             
             if gamma_mu == None:
                 self.gamma_mu = nn.Parameter(torch.rand((1, self.n)))
@@ -91,6 +93,7 @@ class ZINB_WaVE(nn.Module):
                 
         else: 
             _, self.L = V.size()
+            self.V = V.to(device)
             
             if gamma_mu == None:
                 self.gamma_mu = nn.Parameter(torch.rand((self.L, self.n)))
@@ -262,6 +265,7 @@ def val_ZINB(val_data, model, device, epochs = 20):
     
     # creating a model from the original model for evaluation
     model_val = ZINB_WaVE(Y = val_data,
+                          device=device,
                        K = model.K,
                        alpha_mu = model.alpha_mu.detach(),
                        alpha_pi = model.alpha_pi.detach(),

@@ -56,8 +56,8 @@ for j in data_sizes:
                               shuffle=False) 
         
         # a random initialziation
-        model = ZINB_grad.ZINB_WaVE(Y = torch.randint(0,100, size = size), 
-                                    K = K)
+        model = ZINB_grad.ZINB_WaVE(Y = torch.randint(0,100, size = size).to(device), 
+                                    K = K, device = device)
 
         for i, data in enumerate(brain_dl):
             
@@ -65,7 +65,7 @@ for j in data_sizes:
             
             
             # Using the alphas, betas, and theta from the previous model.
-            model = ZINB_grad.ZINB_WaVE(Y = batch, K = K,
+            model = ZINB_grad.ZINB_WaVE(Y = batch, K = K, device= device,
                                         alpha_mu = model.alpha_mu,
                                         alpha_pi = model.alpha_pi,
                                         beta_mu = model.beta_mu,
@@ -102,7 +102,7 @@ for j in data_sizes:
             W_gammas = torch.load(PATH + f"/data_size_{j}/W_gammas_iter_{i}.pt")
             
             # Using the freezed alphas, betas, and theta from the trained model
-            model2 = ZINB_grad.ZINB_WaVE(Y = batch, K = K, 
+            model2 = ZINB_grad.ZINB_WaVE(Y = batch, K = K, device = device, 
                                          W = torch.nn.Parameter(W_gammas['W']),
                                          gamma_mu = torch.nn.Parameter(W_gammas['gamma_mu']),
                                          gamma_pi = torch.nn.Parameter(W_gammas['gamma_pi']),
@@ -141,7 +141,7 @@ for j in data_sizes:
         y_train, y_val = random_split(y, [j-val_size, val_size])
         y_train, y_val = y_train[:].to(device), y_val[:].to(device)
         
-        model = ZINB_grad.ZINB_WaVE(Y = y_train, K = K)
+        model = ZINB_grad.ZINB_WaVE(Y = y_train, K = K, device=device)
         model.to(device)
         
         optimizer = torch.optim.Adam(model.parameters(), lr = 0.08)

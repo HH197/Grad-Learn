@@ -7,11 +7,11 @@
 #SBATCH --output=exp_scale_ZINB%j.out		  # file name for the output
 #SBATCH --error=exp_scale_ZINB%j.err		  # file name for errors
 					                  # %j gets replaced by the job number
-#SBATCH --mail-user=hamid.hamidi@ucalgary.ca  # mail job notifications here
+#SBATCH --mail-user=***@ucalgary.ca  # mail job notifications here
 #SBATCH --mail-type=ALL				  # what to notify about
 
 
-##scp experiment.py data_prep.py ZINB_grad.py hamid.hamidi@arc.ucalgary.ca:/work/long_lab/Hamid/Code
+##scp experiment.py data_prep.py ZINB_grad.py ***@arc.ucalgary.ca:/work/long_lab/Hamid/Code
 
 SLURM_TMPDIR=/scratch/${SLURM_JOB_ID}
 

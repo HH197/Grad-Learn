@@ -15,7 +15,7 @@ import ZINB_grad
 import torch
 import data_prep
 from torch.utils.data import DataLoader, random_split
-
+import numpy as np
 
 data_sizes = [4000, 10000, 15000, 30000, 50000, 100000, 1000000]
 K = 10
@@ -36,6 +36,8 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 for j in data_sizes:
     
+    n_epochs = np.min([round((10**4/n_cells)*300),150])
+    
     try: 
         os.mkdir(PATH + f'/data_size_{j}')
     except:
@@ -45,6 +47,7 @@ for j in data_sizes:
     #create directory for i
     if j > 15000:
         
+
         y_val, _ = train[:val_size]
         y_val = y_val.to(device)
         brain_dl = DataLoader(train,
@@ -77,6 +80,7 @@ for j in data_sizes:
                                                                  optimizer, 
                                                                  model,
                                                                  device,
+                                                                 epochs = n_epochs,
                                                                  PATH = PATH + f'/data_size_{j}/')
             #load the best model in the training process
             model.load_state_dict(torch.load(PATH + \
@@ -116,6 +120,7 @@ for j in data_sizes:
                                                                  optimizer, 
                                                                  model2,
                                                                  device,
+                                                                 epochs = n_epochs,
                                                                  PATH = PATH + f'/data_size_{j}/')
             #load the best model in the training process
             model2.load_state_dict(torch.load(PATH + \
@@ -149,6 +154,7 @@ for j in data_sizes:
                                                                  optimizer, 
                                                                  model,
                                                                  device,
+                                                                 epochs = n_epochs,
                                                                  PATH = PATH + f'/data_size_{j}/')
         model.load_state_dict(torch.load(PATH + \
                                          f'/data_size_{j}/' \

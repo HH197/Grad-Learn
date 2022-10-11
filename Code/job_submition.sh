@@ -42,3 +42,12 @@ python /work/long_lab/Hamid/Code/experiment.py
 
 ## clean up by stopping virtualenv
 deactivate
+
+
+
+###for conda 
+source ~/software/init_conda
+conda activate dlearn
+
+
+

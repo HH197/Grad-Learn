@@ -179,9 +179,7 @@ def train_ZINB(x, optimizer, model, epochs = 150, val = False):
       neg_log_liks.append(neg_log_lik.item())
       
       if i%50 == 1:
-        if val:
-            print(f'validation epoch: {i:3}  loss: {loss.item():10.2f}') 
-        else:
+        if not val:
             print(f'epoch: {i:3}  loss: {loss.item():10.2f}') 
       
       optimizer.zero_grad()
@@ -189,7 +187,7 @@ def train_ZINB(x, optimizer, model, epochs = 150, val = False):
       optimizer.step()
     
     if val:
-        print(f'validation epoch: {i:3}  loss: {loss.item():10.2f}') 
+        print(f'validation loss: {loss.item():10.2f}') 
     else:
         print(f'epoch: {i:3}  loss: {loss.item():10.2f}') # print the last line
     
@@ -245,7 +243,16 @@ def train_ZINB_with_val(x,
         elif early_stop:
             model.load_state_dict(torch.load(PATH + 'best_trained_model.pt'))
             break
-
+        
+    val_loss_last, _ = val_ZINB(val_data, model, device)
+    val_losses.append(val_loss)
+    
+    if val_loss_last <= val_loss:
+        val_loss = val_loss_last
+        
+        # save model checkpoint
+        torch.save(model.state_dict(), PATH + 'best_trained_model.pt')
+        
     print(f'epoch: {i:3}  loss: {loss.item():10.2f}') # print the last line
     
     return losses, neg_log_liks, val_losses
@@ -253,7 +260,7 @@ def train_ZINB_with_val(x,
 
 
 
-def val_ZINB(val_data, model, device, epochs = 20): 
+def val_ZINB(val_data, model, device, epochs = 15): 
     
 
     """ 

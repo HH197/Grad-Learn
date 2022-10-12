@@ -17,11 +17,10 @@ import data_prep
 from torch.utils.data import DataLoader, random_split
 import numpy as np
 
-data_sizes = [4000, 10000, 15000, 30000, 50000, 100000, 1000000]
+# added extra 4000 for warmup
+data_sizes = [4000, 4000, 10000, 15000, 30000, 50000, 100000, 1000000]
 K = 10
 batch_size = 10000
-
-
 
 
 brain = data_prep.Brain_Large(file_dir = PATH + "/Data/1M_neurons_filtered_gene_bc_matrices_h5.h5", 
@@ -36,30 +35,29 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 for j in data_sizes:
     
-    n_epochs = np.min([round((10**4/n_cells)*300),150])
-    
     try: 
         os.mkdir(PATH + f'/data_size_{j}')
     except:
         pass
-    
-    val_size = 10000 if int(j*0.2)>10000 else int(j*0.2)
-    #create directory for i
+        
+    val_size = np.min([10000, int(j*0.2)])
+
     if j > 15000:
         
-
-        y_val, _ = train[:val_size]
+        y_val, _ = test[:val_size]
         y_val = y_val.to(device)
         brain_dl = DataLoader(train,
                               batch_size= batch_size,
                               sampler = data_prep.Indice_Sampler(
-                                  torch.arange(val_size, j)),
+                                  torch.arange(j)),
                               shuffle=False) 
         start_time = time.time()
         # a random initialziation
         model = ZINB_grad.ZINB_WaVE(Y = torch.randint(0,100, size = size).to(device), 
                                     K = K, device = device)
-
+        
+        n_epochs = np.min([round((10**4/j)*300),150])
+        
         for i, data in enumerate(brain_dl):
             
             batch = data[0].reshape((-1, brain.n_select_genes)).to(device)
@@ -95,6 +93,16 @@ for j in data_sizes:
             torch.save(torch.tensor(val_losses),PATH + \
                        f"/data_size_{j}/phase_1_val_losses_iter_{i}.pt")
         
+        #save the best global alpha, beta and theta
+        alpha_beta_theta = {key: model.state_dict()[key] for key in ['log_theta', 
+                                                                     'beta_mu', 
+                                                                     'beta_pi', 
+                                                                     'alpha_mu', 
+                                                                     'alpha_pi']}
+        torch.save(alpha_beta_theta, PATH + f"/data_size_{j}/alpha_beta_theta_best_global.pt")
+        
+        # new number of iterations for training W and Gammas
+        n_epochs = 30
         
         for i, data in enumerate(brain_dl):
             
@@ -103,7 +111,7 @@ for j in data_sizes:
             # Reading the W and Gammas
             W_gammas = torch.load(PATH + f"/data_size_{j}/W_gammas_iter_{i}.pt")
             
-            # Using the freezed alphas, betas, and theta from the trained model
+            # Using alphas, betas, and theta from the trained model and freezing them
             model2 = ZINB_grad.ZINB_WaVE(Y = batch, K = K, device = device, 
                                          W = torch.nn.Parameter(W_gammas['W']),
                                          gamma_mu = torch.nn.Parameter(W_gammas['gamma_mu']),
@@ -140,9 +148,12 @@ for j in data_sizes:
 
     else: 
 
-        y, _ = train[:j]
-        y_train, y_val = random_split(y, [j-val_size, val_size])
-        y_train, y_val = y_train[:].to(device), y_val[:].to(device)
+        y_train, _ = train[:j]
+        #y_train, y_val = random_split(y, [j-val_size, val_size])
+        #y_train, y_val = y_train[:].to(device), y_val[:].to(device)
+        
+        y_val, _ = test[:val_size]
+        y_train, y_val = y_train.to(device), y_val.to(device)
         
         start_time = time.time()
         model = ZINB_grad.ZINB_WaVE(Y = y_train, K = K, device=device)
@@ -154,16 +165,11 @@ for j in data_sizes:
                                                                  optimizer, 
                                                                  model,
                                                                  device,
-                                                                 epochs = n_epochs,
                                                                  PATH = PATH + f'/data_size_{j}/')
         model.load_state_dict(torch.load(PATH + \
                                          f'/data_size_{j}/' \
                                              + 'best_trained_model.pt'))
-        W_gammas = {key: model.state_dict()[key] for key in ['gamma_mu',
-                                                              'gamma_pi',
-                                                              'W']}
-        
-        torch.save(W_gammas,PATH + f"/data_size_{j}/W_gammas.pt")
+
         torch.save(torch.tensor(losses),PATH + \
                    f"/data_size_{j}/losses.pt")
         torch.save(torch.tensor(val_losses),PATH +\

@@ -11,9 +11,6 @@
 #SBATCH --mail-type=ALL				  # what to notify about
 
 
-##scp experiment.py data_prep.py ZINB_grad.py ***@arc.ucalgary.ca:/work/long_lab/Hamid/Code
-
-
 
 ###for conda 
 source ~/software/init_conda

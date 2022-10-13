@@ -21,6 +21,7 @@ import numpy as np
 data_sizes = [4000, 4000, 10000, 15000, 30000, 50000, 100000, 1000000]
 K = 10
 batch_size = 10000
+torch.manual_seed(197)
 
 
 brain = data_prep.Brain_Large(file_dir = PATH + "/Data/1M_neurons_filtered_gene_bc_matrices_h5.h5", 

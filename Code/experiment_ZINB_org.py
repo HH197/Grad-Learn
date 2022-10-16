@@ -9,7 +9,7 @@ import sys
 import os
 import time
 
-PATH = '/work/long_lab/Hamid' # from the user
+PATH = '/home/longlab/Data/Thesis' # from the user
 
 sys.path.append(PATH+'/Code')
 

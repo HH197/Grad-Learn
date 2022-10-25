@@ -6,8 +6,7 @@ Created on Thu Oct 13 10:13:02 2022
 """
 
 import sys
-import os
-import time
+
 
 PATH = '/home/longlab/Desktop' # from the user
 
@@ -22,7 +21,7 @@ from rpy2.robjects import numpy2ri
 
 torch.manual_seed(197)
 
-data_sizes = [4000, 10000, 15000, 30000, 50000, 100000, 1000000]
+data_sizes = [4000, 10000, 15000, 30000]
 K = 10
 
 brain = data_prep.Brain_Large(file_dir = PATH + "/Data/1M_neurons_filtered_gene_bc_matrices_h5.h5", 
@@ -34,12 +33,7 @@ train, test = random_split(brain, [brain.n_cells-test_size, test_size])
 ro.r('library(zinbwave)')
 
 for j in data_sizes:
-    print(j)
-    try: 
-        os.mkdir(PATH + f'/data_size_{j}')
-    except:
-        pass
-
+    
     y_train, _ = train[:j]
     
     y_train = y_train.numpy()
@@ -50,25 +44,18 @@ for j in data_sizes:
     X = ro.r.matrix(y_train, nrow=rows, ncol=cols)
     
     ro.r.assign("data", X)
-    ro.r.assign("path", PATH + f"/data_size_{j}/model_zinb_org.rds")
+    ro.r.assign("path", PATH + f"/ZINB_org/data_size_{j}/model_zinb_org.rds")
     
-    start_time = time.time()
-    
-    ro.r('''
-    K = 10
-    model_zinb <- zinbModel(n=NROW(data), J=NCOL(data), K=K)
-    model_zinb <- zinbInitialize(model_zinb, data)
-    model_zinb <- zinbOptimize(model_zinb, data)
-    ''')
     
     ro.r('''
-         saveRDS(model_zinb, file = path)
+         model_zinb <- readRDS(path)
+         mu <- getMu(model_zinb)
+         theta <- getTheta(model_zinb)
+         logitPi <- getLogitPi(model_zinb)
+         loglik <- zinb.loglik(data, mu, theta, logitPi)
          ''')    
-    
-    wall_time = time.time() - start_time
-
-    with open(PATH + f"/data_size_{j}/run_time_ZINB_org.txt", "w") as f:
-        # Writing time to a file:
-        f.write(f' wall time is: {wall_time}')
+    log_like = ro.r("loglik")
+    with open(PATH + f"/ZINB_org/data_size_{j}/loglik_ZINB_org.txt", "w") as f:
+        f.write(f'log-likelihood train is: {-log_like[0]}, log-likelihood test is:')
  
 

@@ -1,11 +1,7 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
+
 """
-Created on Sat Jun 18 15:19:08 2022
-
-@author: hh197
-
-This will contain all of the helper functions. 
+This contains all of the helper functions for experiments and preliminary visualizations.
+@author: HH197
 """
 import numpy as np
 import seaborn as sn
@@ -210,9 +206,6 @@ def entropy(batches):
     n_batches = len(n_batches)
     frq = frq/np.sum(frq)
     
-    # if frequency == 0 or frequency == 1:
-    #     return 0
-    
     return -np.sum(frq*np.log(frq))
 
 
@@ -274,14 +267,15 @@ def entropy_batch_mixing(latent_space,
     nne.fit(latent_space)
     kmatrix = nne.kneighbors_graph(latent_space) - scipy.sparse.identity(n_samples)
     
-    ind = np.random.choice(n_samples, size=n)
-    inds = kmatrix[ind].nonzero()[1].reshape(n, K)
     
     score = 0
     
     for t in range(n_iter):
+        ind = np.random.choice(n_samples, size=n)
+        inds = kmatrix[ind].nonzero()[1].reshape(n, K)
         score += np.mean([entropy(batches[inds[i]])\
-                          for i in range(n)])
+                      for i in range(n)])
+
     score = score/n_iter
     
     return score

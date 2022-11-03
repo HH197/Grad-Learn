@@ -1,18 +1,20 @@
 
 """
-This contains all of the helper functions for experiments and preliminary visualizations.
+This contains all of the helper functions for experiments and visualizations.
 @author: HH197
 """
+
 import numpy as np
-import seaborn as sn
+# import seaborn as sn
 from sklearn import metrics
 from sklearn.cluster import KMeans
 from matplotlib import pyplot as plt
-from pandas import DataFrame
+# from pandas import DataFrame
 from sklearn.neighbors import NearestNeighbors
 import scipy.sparse
 from sklearn.manifold import TSNE
 from sklearn.cluster import AgglomerativeClustering
+
 
 def kmeans(data, kmeans_kwargs = {"init": "random", 
                                    "n_init": 50, 
@@ -22,8 +24,6 @@ def kmeans(data, kmeans_kwargs = {"init": "random",
     """Performing K-means on the encoded data"""
     
     sil_coeff = []
-    
-    
     
     for k in range(2, 10):
         kmeans = KMeans(n_clusters=k, **kmeans_kwargs)
@@ -63,10 +63,12 @@ def plot_loss(losses, xlab = 'Epoch', ylab = 'Neg-Loglikelihood'):
         The y axis label.
     '''
     
-    plt.plot(range(len(losses)), losses)
+    x = np.arange(len(losses))
+    y = np.array(losses)
+    
+    plt.plot(x, y)
     plt.ylabel(ylab)
     plt.xlabel(xlab)
-
 
 
 def measure_q(data, Groups= None, n_clusters=6,  
@@ -75,24 +77,43 @@ def measure_q(data, Groups= None, n_clusters=6,
                                "n_init": 50, 
                                "max_iter": 400, 
                                "random_state": 197}):
+
+    '''
+    This function will measure the quality of clustering using NMI, ARI, and ASW. 
     
-    """Measuring the quality of clustering using NMI and confusion matrix"""
+    Parameters
+    ----------
+    data : an array 
+        The latent space of the model.
     
+    Groups : an array
+        The real lables.
+    
+    n_clusters : int
+        The number of clusters in K-means.
+    '''
+    Groups = np.ndarray.astype(Groups, np.int)
+            
     kmeans = KMeans(n_clusters, **kmeans_kwargs)
     kmeans.fit(data)
     
-    
-    Groups = np.ndarray.astype(Groups, np.int)
     NMI = metrics.cluster.normalized_mutual_info_score(Groups, kmeans.labels_)
     print(f'The NMI score is: {NMI}')
-    CM = metrics.confusion_matrix(Groups, kmeans.labels_)
     
-    df_cm = DataFrame(CM, range(1, CM.shape[0]+1), range(1, CM.shape[1]+1))
-    # plt.figure(figsize=(10,7))
-    sn.set(font_scale=1.4) # for label size
-    sn.heatmap(df_cm, annot=True, annot_kws={"size": 5}) # font size
+    ARI = metrics.adjusted_rand_score(Groups, kmeans.labels_)
+    print(f'The ARI score is: {ARI}')
     
-    plt.show()
+    ASW = metrics.silhouette_score(data, kmeans.labels_)
+    print(f'The ASW score is: {ASW}')
+    
+    # CM = metrics.confusion_matrix(Groups, kmeans.labels_)
+    
+    # df_cm = DataFrame(CM, range(1, CM.shape[0]+1), range(1, CM.shape[1]+1))
+    # # plt.figure(figsize=(10,7))
+    # sn.set(font_scale=1.4) # for label size
+    # sn.heatmap(df_cm, annot=True, annot_kws={"size": 5}) # font size
+    
+    # plt.show()
 
 def corrupting(data, p = 0.10, method = 'Uniform', percentage = 0.10):
     
@@ -106,7 +127,7 @@ def corrupting(data, p = 0.10, method = 'Uniform', percentage = 0.10):
         1. Uniform zero introduction: Randomly selected a percentage of the nonzero 
         entries and multiplied the entry n with a Ber(0.9) random variable. 
         2. Binomial data corruption: Randomly selected a percentage of the matrix and
-replaced an entry n with a Bin(n, 0.2) random variable.
+        replaced an entry n with a Bin(n, 0.2) random variable.
 
 
     Parameters

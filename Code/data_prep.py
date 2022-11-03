@@ -354,7 +354,7 @@ class RETINA(Dataset):
         Parameters
         ----------
         file_dir: str 
-            The directory of the HDF5 file which should be provided by the user.
+            The directory of the .loom file which should be provided by the user.
             
         '''
         

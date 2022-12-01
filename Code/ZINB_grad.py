@@ -196,6 +196,7 @@ def train_ZINB_with_val(x,
                         optimizer, 
                         model,
                         device,
+                        X_val = None,
                         epochs = 150, 
                         PATH = '/home/longlab/Data/Thesis/Data/', 
                         early_stop = False):
@@ -204,7 +205,7 @@ def train_ZINB_with_val(x,
     neg_log_liks = []
     val_losses = []
     
-    val_loss, _ = val_ZINB(val_data, model, device)
+    val_loss, _ = val_ZINB(val_data, model, device, X_val = X_val)
     val_losses.append(val_loss)
     
     # to avoid error when training is not making the model any better
@@ -229,7 +230,7 @@ def train_ZINB_with_val(x,
       if i%50 == 1:
         print(f'epoch: {i:3}  loss: {loss.item():10.2f}')
 
-        val_loss_last, _ = val_ZINB(val_data, model, device)
+        val_loss_last, _ = val_ZINB(val_data, model, device, X_val = X_val)
         val_losses.append(val_loss)
         
         if val_loss_last <= val_loss:
@@ -241,7 +242,7 @@ def train_ZINB_with_val(x,
             model.load_state_dict(torch.load(PATH + 'best_trained_model.pt'))
             break
         
-    val_loss_last, _ = val_ZINB(val_data, model, device)
+    val_loss_last, _ = val_ZINB(val_data, model, device, X_val = X_val)
     val_losses.append(val_loss)
     
     if val_loss_last <= val_loss:
@@ -257,7 +258,7 @@ def train_ZINB_with_val(x,
 
 
 
-def val_ZINB(val_data, model, device, epochs = 15): 
+def val_ZINB(val_data, model, device, epochs = 15, X_val= None): 
     
 
     """ 
@@ -270,16 +271,17 @@ def val_ZINB(val_data, model, device, epochs = 15):
     
     """
     
-    # creating a model from the original model for evaluation
-    model_val = ZINB_WaVE(Y = val_data,
-                          device=device,
-                       K = model.K,
-                       alpha_mu = model.alpha_mu.detach(),
-                       alpha_pi = model.alpha_pi.detach(),
-                       beta_mu = model.beta_mu.detach(),
-                       beta_pi = model.beta_pi.detach(),
-                       log_theta = model.log_theta.detach())
 
+    model_val = ZINB_WaVE(Y = val_data,
+                          X= X_val,
+                          device=device,
+                          K = model.K,
+                          alpha_mu = model.alpha_mu.detach(),
+                          alpha_pi = model.alpha_pi.detach(),
+                          beta_mu = model.beta_mu.detach(),
+                          beta_pi = model.beta_pi.detach(),
+                          log_theta = model.log_theta.detach())
+        
     # Tuning the validation model parameters (W and gammas)
     model_val.to(device)
     optimizer = torch.optim.Adam(model_val.parameters(), lr = 0.1)

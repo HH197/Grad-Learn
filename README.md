@@ -12,11 +12,29 @@ We assessed our proposed model, ZINB-Grad, and compared it with [scVI](https://w
 
 Our development shows that a conventional model optimized with the proper techniques and implemented using the right tools can outperform state-of-the-art deep models. It can generalize better for unseen data; it is more interpretable, and not surprisingly, it uses extremely fewer resources compared to deep models.
 
+## Table of Contents
+
+- [ZINB-Grad: A Gradient Based Linear Model Outperforming Deep Models](#zinb-grad--a-gradient-based-linear-model-outperforming-deep-models)
+  * [Table of Contents](#table-of-contents)
+  * [Project Organization](#project-organization)
+  * [ZINB-WaVE](#zinb-wave)
+    + [ZINB-WaVE Bottleneck](#zinb-wave-bottleneck)
+  * [ZINB-Grad](#zinb-grad)
+  * [Results And Model Evaluation](#results-and-model-evaluation)
+    + [Run-time](#run-time)
+    + [Generalization](#generalization)
+    + [Imputation Evaluation](#imputation-evaluation)
+    + [Clustering](#clustering)
+    + [Batch Effect Correction](#batch-effect-correction)
+  * [Conclusion](#conclusion)
+
+
+
 ## Project Organization
 ```
 .
 ├── Figures/                                    : Contains all plots and graphs 
-├── Code/                                       : Contains the implementation of ZINB-Grad along with helper functions for analysis
+├── Code/                                       : Contains the implementation of ZINB-Grad, along with helper functions for analysis
 ├── Experiments/                                : Contains Python scripts to perform generalization and run-time tests
 ├── Notebooks/                                  : Contains notebooks for experiments
 └── README.md                                   : Project description and results
@@ -89,7 +107,7 @@ We corrupted the CORTEX data set, and then, we estimated the parameters of the m
 
 ### Clustering
 
-We performed clustering on the latent space with 10 dimensions for scVI, ZINB-WaVE, and ZINB-Grad using K-means. We calculated the Normalized Mutual Information (NMI) and Adjusted Rand Index (ARI) between the gold standard labels of the CORTEX data set and labels obtained from K-means along with Average Silhouette Width (ASW) to assess the clustering performance of the ZINB-Grad compared to scVI and ZINB-WaVE (below figure). For all scores, NMI, ARI, and ASW, the higher is better.
+We performed clustering on the latent space with 10 dimensions for scVI, ZINB-WaVE, and ZINB-Grad using K-means. We calculated the Normalized Mutual Information (NMI) and Adjusted Rand Index (ARI) between the gold standard labels of the CORTEX data set and labels obtained from K-means, along with Average Silhouette Width (ASW) to assess the clustering performance of the ZINB-Grad compared to scVI and ZINB-WaVE (below figure). For all scores, NMI, ARI, and ASW, the higher is better.
 
 <p align="center">
 <img width="500" src="https://github.com/HH197/ZINB-Grad/blob/main/Figures/clustering.png">

@@ -127,3 +127,8 @@ These graphs show clearly that without performing batch correction, the technica
 
 We used the entropy of batch mixing to measure the batch effect correction. We randomly selected 100 cells from batches and found 50 nearest neighbors of each randomly chosen cell to calculate the average regional Shanon entropy of all 100 cells. The procedure is repeated for 100 iterations, and the average of the iterations is considered as the batch mixing score. We could not use ZINB-WaVE for the RETINA data set as it was too large for ZINB-WaVE to handle. The batch mixing scores for scVI and ZINB-Grad are 0.64 and 0.54, respectively.  
 
+## Conclusion 
+
+We showed that our implementation is more efficient than both conventional models and deep learning models. Moreover, our model is scalable to millions of samples and has performance comparable with deep models in terms of accuracy. As the devil is in the implementation details, the supremacy of deep models may not be due to their sophisticated deep architecture. Instead, the source of effectiveness is merely the optimization procedure built-in to deep models
+implementations, which could also be adopted by many traditional models.
+

@@ -55,33 +55,34 @@ Since Lopez *et al.* have clearly shown that [scVI](https://www.nature.com/artic
 
 Our analyses showed that ZINB-Grad run-time is exceedingly lower than the scVI for any data size (the following plot) due to the simplicity of the model. All scVI and ZINB-Grad tests were performed using a computer equipped with a V100 GPU and 32 GB of system memory for GPU acceleration.
 
-<embed src="https://github.com/HH197/ZINB-Grad/blob/main/Figures/train_time.pdf" type="application/pdf">
+<img width="600" height="300" src="https://github.com/HH197/ZINB-Grad/blob/main/Figures/train_time.png">
 
-###Generalization
+### Generalization
 
 We examined the ZINB-WaVE goodness-of-fit for the train data as a reference for our model (ZINB-WaVE cannot scale to > 30,000 sample). ZINB-Grad has the same (or even better) negative log-likelihood compared to ZINB-WaVE for various data sizes (below figure). Therefore, our optimization procedure will get a minimum of comparable quality to ZINB-WaVE’s estimation process. The train negative log-likelihood for ZINB-Grad is the same or better compared to scVI.
 
-<embed src="https://github.com/HH197/ZINB-Grad/blob/main/Figures/train_neg_loglik.pdf" type="application/pdf">
+<img width="600" height="300" src="https://github.com/HH197/ZINB-Grad/blob/main/Figures/train_neg_loglik.png">
 
 Moreover, the negative log-likelihood of the validation set for ZINB-Grad is better than scVI in any data sizes (following figure), showing that our linear model generalizes (extrapolates) better than a deep model even for large sample sizes. 
 
-<embed src="https://github.com/HH197/ZINB-Grad/blob/main/Figures/test_neg_loglik.pdf" type="application/pdf">
+<img width="600" height="300" src="https://github.com/HH197/ZINB-Grad/blob/main/Figures/test_neg_loglik.png" >
 
 
 ### Imputation Evaluation
 
 We corrupted the data by randomly selecting 10% of the non-zero entries and altering them to zero. Then, we used the median of the ${\mathbb L}_1$ distance between the original and imputed values of the altered data set as the accuracy for data imputation. The ${\mathbb L}_1$ distance between two vectors is defined as: 
+
 $${\mathbb L}_1 (x, y) = \sum_{i=1}^n \left| x_i - y_i \right|$$
 
-We corrupted the CORTEX data set, and then, we estimated the parameters of the models using the corrupted data set. Finally, we compared the original data set (before corruption) with the imputed data from the models trained with the corrupted data set using the median ${\mathbb L}_1$ distance. Fig. \ref{imputation} shows the performance of the three models in terms of imputation error. ZINB-Grad performance is comparable with scVI and is better than ZINB-WaVE. 
+We corrupted the CORTEX data set, and then, we estimated the parameters of the models using the corrupted data set. Finally, we compared the original data set (before corruption) with the imputed data from the models trained with the corrupted data set using the median ${\mathbb L}_1$ distance. The following figure shows the performance of the three models in terms of imputation error. ZINB-Grad performance is comparable with scVI and is better than ZINB-WaVE. 
 
-<embed src="https://github.com/HH197/ZINB-Grad/blob/main/Figures/imputation.pdf" type="application/pdf">
+<img width="300" src="https://github.com/HH197/ZINB-Grad/blob/main/Figures/imputation.png">
 
 ### Clustering
 
 We performed clustering on the latent space with 10 dimensions for scVI, ZINB-WaVE, and ZINB-Grad using K-means. We calculated the Normalized Mutual Information (NMI) and Adjusted Rand Index (ARI) between the gold standard labels of the CORTEX data set and labels obtained from K-means along with Average Silhouette Width (ASW) to assess the clustering performance of the ZINB-Grad compared to scVI and ZINB-WaVE (below figure). For all scores, NMI, ARI, and ASW, the higher is better.
 
-<embed src="https://github.com/HH197/ZINB-Grad/blob/main/Figures/clustering.pdf" type="application/pdf">
+<img width="300" src="https://github.com/HH197/ZINB-Grad/blob/main/Figures/clustering.png">
 
 ZINB-Grad and ZINB-WaVE scores are close, and the clustering scores show that ZINB-Grad performed slightly better than scVI.
 
@@ -91,23 +92,23 @@ We evaluated the accountability for technical variability by assessing batch ent
 
 - The following figure show the latent space of the ZINB-Grad when batch annotations are not considered (Blue dots are Batch 1 and Green dots are Batch 2): 
 
-<embed src="https://github.com/HH197/ZINB-Grad/blob/main/Figures/batch_ncorrected.pdf" type="application/pdf">
+<img width="300" height="300" src="https://github.com/HH197/ZINB-Grad/blob/main/Figures/batch_ncorrected.png">
 
 - The different clusters (cell types)  when batch annotations are not modeled: 
 
-<embed src="https://github.com/HH197/ZINB-Grad/blob/main/Figures/batch_ncorrected_clusters.pdf" type="application/pdf">
+<img width="300" height="300" src="https://github.com/HH197/ZINB-Grad/blob/main/Figures/batch_ncorrected_clusters.png">
 
 - The following figure show the latent space of the ZINB-Grad when batch annotations are considered (Blue dots are Batch 1 and Green dots are Batch 2): 
 
-<embed src="https://github.com/HH197/ZINB-Grad/blob/main/Figures/batch_corrected.pdf" type="application/pdf">
+<img width="300" height="300" src="https://github.com/HH197/ZINB-Grad/blob/main/Figures/batch_corrected.png">
 
 - The different clusters (cell types)  when batch annotations are modeled: 
 
-<embed src="https://github.com/HH197/ZINB-Grad/blob/main/Figures/batch_corrected_clusters.pdf" type="application/pdf">
+<img width="300" height="300" src="https://github.com/HH197/ZINB-Grad/blob/main/Figures/batch_corrected_clusters.png">
 
 These graphs show clearly that without performing batch correction, the technical variability will cause the cells in the same cell population to construct different clusters, which will be misleading in the downstream analysis. Moreover, it shows that after considering batch annotations, ZINB-Grad accounts for the technical variability and results in a biologically meaningful latent space.
 
-We used the entropy of batch mixing to measure the batch effect correction. We randomly selected 100 cells from batches and found 50 nearest neighbors of each randomly chosen cell to calculate the average regional Shanon entropy of all 100 cells. The procedure is repeated for 100 iterations, and the average of the iterations is considered as the batch mixing score. We could not use ZINB-WaVE for the RETINA \cite{shekhar2016comprehensive} data set as it was too large for ZINB-WaVE to handle. The batch mixing scores for scVI and ZINB-Grad are 0.64 and 0.54, respectively.  
+We used the entropy of batch mixing to measure the batch effect correction. We randomly selected 100 cells from batches and found 50 nearest neighbors of each randomly chosen cell to calculate the average regional Shanon entropy of all 100 cells. The procedure is repeated for 100 iterations, and the average of the iterations is considered as the batch mixing score. We could not use ZINB-WaVE for the RETINA data set as it was too large for ZINB-WaVE to handle. The batch mixing scores for scVI and ZINB-Grad are 0.64 and 0.54, respectively.  
 
 
 

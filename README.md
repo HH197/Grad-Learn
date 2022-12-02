@@ -56,7 +56,7 @@ Since Lopez *et al.* have clearly shown that [scVI](https://www.nature.com/artic
 Our analyses showed that ZINB-Grad run-time is exceedingly lower than the scVI for any data size (the following plot) due to the simplicity of the model. All scVI and ZINB-Grad tests were performed using a computer equipped with a V100 GPU and 32 GB of system memory for GPU acceleration.
 
 <p align="center">
-<img width="600" height="450" src="https://github.com/HH197/ZINB-Grad/blob/main/Figures/train_time.png">
+<img width="600" height="400" src="https://github.com/HH197/ZINB-Grad/blob/main/Figures/train_time.png">
 </p>
 ### Generalization
 
@@ -99,25 +99,25 @@ We evaluated the accountability for technical variability by assessing batch ent
 - The following figure show the latent space of the ZINB-Grad when batch annotations are not considered (Blue dots are Batch 1 and Green dots are Batch 2): 
 
 <p align="center">
-<img width="300" height="300" src="https://github.com/HH197/ZINB-Grad/blob/main/Figures/batch_ncorrected.png">
+<img width="600" height="600" src="https://github.com/HH197/ZINB-Grad/blob/main/Figures/batch_ncorrected.png">
 </p>
 
 - The different clusters (cell types)  when batch annotations are not modeled: 
 
 <p align="center">
-<img width="300" height="300" src="https://github.com/HH197/ZINB-Grad/blob/main/Figures/batch_ncorrected_clusters.png">
+<img width="600" height="600" src="https://github.com/HH197/ZINB-Grad/blob/main/Figures/batch_ncorrected_clusters.png">
 </p>
 
 - The following figure show the latent space of the ZINB-Grad when batch annotations are considered (Blue dots are Batch 1 and Green dots are Batch 2): 
 
 <p align="center">
-<img width="300" height="300" src="https://github.com/HH197/ZINB-Grad/blob/main/Figures/batch_corrected.png">
+<img width="600" height="600" src="https://github.com/HH197/ZINB-Grad/blob/main/Figures/batch_corrected.png">
 </p>
 
 - The different clusters (cell types)  when batch annotations are modeled: 
 
 <p align="center">
-<img width="300" height="300" src="https://github.com/HH197/ZINB-Grad/blob/main/Figures/batch_corrected_clusters.png">
+<img width="600" height="600" src="https://github.com/HH197/ZINB-Grad/blob/main/Figures/batch_corrected_clusters.png">
 </p>
 
 These graphs show clearly that without performing batch correction, the technical variability will cause the cells in the same cell population to construct different clusters, which will be misleading in the downstream analysis. Moreover, it shows that after considering batch annotations, ZINB-Grad accounts for the technical variability and results in a biologically meaningful latent space.

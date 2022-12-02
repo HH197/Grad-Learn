@@ -43,7 +43,7 @@ However, this limitation does not imply that the traditional linear models are s
 
 Supported by most modern machine learning packages (e.g., Pytorch and Tensorflow), gradient descent and its variants are used to optimize deep neural networks and are among the most popular algorithms for optimization. By updating the parameters in the opposite direction of the objective function’s gradient, gradient descent finds local optimum values of the model’s parameters to minimize the objective function regardless of how complicated is the model. 
 
-However, a neglected fact is that gradient descent may also be applied to “simpler” linear models when appropriate. Towards this line, we developed a gradient descent-based stochastic optimization process for the ZINB-WaVE to overcome the scalability and efficiency challenges inherited in its optimization procedure. We combined the new optimization method with modern statistical and machine learning libraries, which resulted in the ZINB-Grad, a gradient-based ZINB GLMM with GPU acceleration, high-performance scalability, and memory-efficient estimation.
+However, a neglected fact is that gradient descent may also be applied to “simpler” linear models when appropriate. Towards this line, we developed a gradient descent-based stochastic optimization process for the ZINB-WaVE to overcome the scalability and efficiency challenges inherited in its optimization procedure. We combined the new optimization method with modern statistical and machine learning libraries, which resulted in the ZINB-Grad, a gradient-based ZINB GLMM with GPU acceleration, high-performance scalability, and memory-efficient estimation. Our implementation is available [here](https://github.com/HH197/ZINB-Grad/tree/main/Code) with descriptions of how to use ZINB-Grad.
 
 ## Results And Model Evaluation
 
@@ -58,6 +58,7 @@ Our analyses showed that ZINB-Grad run-time is exceedingly lower than the scVI f
 <p align="center">
 <img width="600" height="400" src="https://github.com/HH197/ZINB-Grad/blob/main/Figures/train_time.png">
 </p>
+
 ### Generalization
 
 We examined the ZINB-WaVE goodness-of-fit for the train data as a reference for our model (ZINB-WaVE cannot scale to > 30,000 sample). ZINB-Grad has the same (or even better) negative log-likelihood compared to ZINB-WaVE for various data sizes (below figure). Therefore, our optimization procedure will get a minimum of comparable quality to ZINB-WaVE’s estimation process. The train negative log-likelihood for ZINB-Grad is the same or better compared to scVI.
@@ -123,41 +124,4 @@ We evaluated the accountability for technical variability by assessing batch ent
 These graphs show clearly that without performing batch correction, the technical variability will cause the cells in the same cell population to construct different clusters, which will be misleading in the downstream analysis. Moreover, it shows that after considering batch annotations, ZINB-Grad accounts for the technical variability and results in a biologically meaningful latent space.
 
 We used the entropy of batch mixing to measure the batch effect correction. We randomly selected 100 cells from batches and found 50 nearest neighbors of each randomly chosen cell to calculate the average regional Shanon entropy of all 100 cells. The procedure is repeated for 100 iterations, and the average of the iterations is considered as the batch mixing score. We could not use ZINB-WaVE for the RETINA data set as it was too large for ZINB-WaVE to handle. The batch mixing scores for scVI and ZINB-Grad are 0.64 and 0.54, respectively.  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

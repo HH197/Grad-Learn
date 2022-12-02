@@ -43,7 +43,9 @@ However, this limitation does not imply that the traditional linear models are s
 
 Supported by most modern machine learning packages (e.g., Pytorch and Tensorflow), gradient descent and its variants are used to optimize deep neural networks and are among the most popular algorithms for optimization. By updating the parameters in the opposite direction of the objective function’s gradient, gradient descent finds local optimum values of the model’s parameters to minimize the objective function regardless of how complicated is the model. 
 
-However, a neglected fact is that gradient descent may also be applied to “simpler” linear models when appropriate. Towards this line, we developed a gradient descent-based stochastic optimization process for the ZINB-WaVE to overcome the scalability and efficiency challenges inherited in its optimization procedure. We combined the new optimization method with modern statistical and machine learning libraries, which resulted in the ZINB-Grad, a gradient-based ZINB GLMM with GPU acceleration, high-performance scalability, and memory-efficient estimation. Our implementation is available [here](https://github.com/HH197/ZINB-Grad/tree/main/Code) with descriptions of how to use ZINB-Grad.
+However, a neglected fact is that gradient descent may also be applied to “simpler” linear models when appropriate. Towards this line, we developed a gradient descent-based stochastic optimization process for the ZINB-WaVE to overcome the scalability and efficiency challenges inherited in its optimization procedure. We combined the new optimization method with modern statistical and machine learning libraries, which resulted in the ZINB-Grad, a gradient-based ZINB GLMM with GPU acceleration, high-performance scalability, and memory-efficient estimation. 
+
+**Our implementation is available [here](https://github.com/HH197/ZINB-Grad/tree/main/Code) with descriptions of how to use ZINB-Grad.**
 
 ## Results And Model Evaluation
 

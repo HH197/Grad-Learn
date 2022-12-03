@@ -16,16 +16,31 @@ from sklearn.manifold import TSNE
 from sklearn.cluster import AgglomerativeClustering
 
 
-def kmeans(data, kmeans_kwargs = {"init": "random", 
+def kmeans(data,
+           range_cluster = (2, 10),
+           kmeans_kwargs = {"init": "random", 
                                    "n_init": 50, 
                                    "max_iter": 400, 
                                    "random_state": 197}):
         
-    """Performing K-means on the encoded data"""
+    """
+    Performs K-means on the data
+    
+    Perfoms K-means on the data (usually latent space of a model) for various number of clusters 
+    and returns a list containing average Silhouette width. 
+    
+    Parameters
+    ----------
+    kmeans_kwargs : dict
+        For more details, please refer to scikit-learn documentation.
+    range_cluster : tuple
+        The range of the number of clusters.
+
+    """
     
     sil_coeff = []
     
-    for k in range(2, 10):
+    for k in range(range_cluster[0], range_cluster[1]):
         kmeans = KMeans(n_clusters=k, **kmeans_kwargs)
         kmeans.fit(data)
         # score = kmeans.inertia_

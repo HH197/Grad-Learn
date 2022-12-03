@@ -383,8 +383,9 @@ def HC(latent,
         num_clusters = [2, 3, 4, 7]):
     
     '''
-    Given a `latent` space and class labels, the function will perform hierarchical 
-    clustering (HC) on the latent space and calculate the NMI score.
+    Given a `latent` space for the CORTEX data set and labels,
+    the function will perform hierarchical clustering (HC) on the latent space
+    and calculate the NMI score.
     
     
     Parameters

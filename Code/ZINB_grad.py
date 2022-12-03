@@ -1,7 +1,7 @@
 
 """
-The ZINB-WaVE implementation using the gradient descent approach,
- pytorch, and Pyro.
+the ZINB-Grad, a gradient-based ZINB GLMM with GPU acceleration,
+high-performance scalability, and memory-efficient estimation.
 @author: HH197
 """
 import torch
@@ -10,9 +10,74 @@ from pyro.distributions import ZeroInflatedNegativeBinomial as ZINB
 
 
 
-# The ZINB model 
+class ZINB_Grad(nn.Module):
+    
+    """
+    The ZINB-Grad model
+    
+    A gradient descent-based stochastic optimization process for the ZINB-WaVE
+    to overcome the scalability and efficiency challenges inherited in its optimization
+    procedure. The result of this combination is ZINB-Grad. 
+    
+    Parameters
+    ----------
+    Y : torch.Tensor
+        Tensor of shape (n_samples, n_features). 
+    device : A `torch.device` object
+        Please refer to Pytorch documentation for more details.
+    K : int (optional, default=1)
+         Number of latent space dimensions
+    W : torch.Tensor (optional, default=None)
+        Tensor of shape (n_samples, K).
+    X : torch.Tensor (optional, default=None)
+        Known tensor of shape (n_samples, M). M is user definedand is the number of 
+        covariates in X. When X = None, X is a column of ones.
+    V : torch.Tensor (optional, default=None)
+        Known tensor of shape (n_features, L). L is user defined and is the number of 
+        covariates in V. When V = None, V is a column of ones.
+    alpha_mu : torch.Tensor (optional, default=None)
+        Tensor of shape (K, n_features).
+    alpha_pi : torch.Tensor (optional, default=None)
+        Tensor of shape (K, n_features).
+    beta_mu : torch.Tensor (optional, default=None)
+        Tensor of shape (M, n_features).
+    beta_pi : torch.Tensor (optional, default=None)
+        Tensor of shape (M, n_features).
+    gamma_mu : torch.Tensor (optional, default=None)
+        Tensor of shape (L, n_samples).
+    gamma_pi : torch.Tensor (optional, default=None)
+        Tensor of shape (L, n_samples).
+    log_theta : torch.Tensor (optional, default=None)
+        Tensor of shape (1, n_features). The natural logarithm of the theta parameter in 
+        the ZINB distribution.
 
-class ZINB_WaVE(nn.Module):
+
+    O_mu : torch.Tensor (optional, default=None)
+        Tensor of shape (n_samples, n_features).
+    O_pi : torch.Tensor (optional, default=None)
+        Tensor of shape (n_samples, n_features).
+    
+    Attributes
+    ----------
+    n : int
+        The number of samples
+    J : int
+        The number of features (genes)
+    M : int 
+        The number of covariates (columns) in X. 
+    
+    Examples
+    --------
+    >>> import ZINB_grad
+    >>> import torch
+    >>> import data_prep
+    >>> cortex = data_prep.CORTEX()
+    >>> y, labels = next(iter(DataLoader(cortex, 
+                                 batch_size= cortex.n_cells,
+                                 shuffle=True)))
+    >>> device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    >>> model = ZINB_grad.ZINB_WaVE(Y = y, K = 10, device =device)
+    """
 
     def __init__(self,
                  Y,
@@ -33,9 +98,7 @@ class ZINB_WaVE(nn.Module):
 
         super().__init__()
         
-        self.out_size = Y.size()
-        
-        self.n, self.J = self.out_size #n samples and J genes
+        self.n, self.J = Y.size() #n samples and J genes
         
         self.X = X
         self.V = V
@@ -120,6 +183,21 @@ class ZINB_WaVE(nn.Module):
 
 
     def forward(self, x):
+        
+        """
+        The forward method of class Module in torch.nn
+        
+        Parameters
+        ----------
+        x : torch.Tensor
+            Tensor of shape (n_samples, n_features).
+        
+       Returns
+       -------
+       p : torch.Tensor
+            Tensor of shape (n_samples, n_features) which is the probability of failure for each element of 
+            data in the ZINB distribution.
+        """
         self.log_mu = self.X @ self.beta_mu + self.gamma_mu.T @ self.V.T + \
             self.W @ self.alpha_mu
         self.log_pi = self.X @ self.beta_pi + self.gamma_pi.T @ self.V.T + \
@@ -135,6 +213,25 @@ class ZINB_WaVE(nn.Module):
 
 
     def _loss(self, x, p):
+        
+        """
+        Returns the loss 
+        
+        A method to calculate the negative log-likelihood, along with the regularization penalty. 
+        The regularization is applied to avoid overfitting. 
+        
+        Parameters
+        ----------
+        x : torch.Tensor
+            Tensor of shape (n_samples, n_features).
+        
+       Returns
+       -------
+       loss : float
+            Sum of the negative log-likelihood for all samples. 
+       pen : float
+            The regularization term loss.
+        """
         
         J = x.shape[1]
         n = x.shape[0]
@@ -159,6 +256,32 @@ class ZINB_WaVE(nn.Module):
 
 def train_ZINB(x, optimizer, model, epochs = 150, val = False):
     
+    """
+    Trains a ZINB-Grad model
+    
+    The function will train a ZINB-Grad model using an optimizer for a number of epochs, and it 
+    will return both losses and negative log-likelihood, which were obtained during the training procedure. 
+    
+    Parameters
+    ----------
+    x : torch.Tensor
+        It is the data for training, a Tensor of shape (n_samples, n_features). 
+    optimizer: An object of torch.optim.Optimizer
+        For more details, please refer to Pytorch documentation.
+    model: An object of the ZINB_Grad class
+        Please refer to the example.
+    epochs : int (optional, default=150)
+        Number of iteration for training.
+    val : bool (optional, default=False)
+        Whether it is validation or training process.
+    
+    Returns
+    -------
+    losses : list
+         A list consisting of the loss of each epoch. 
+    neg_log_liks : list
+         A list consisting of the negative Log-likelihood of each epoch.
+    """
     losses = []
     neg_log_liks = []
     
@@ -200,6 +323,46 @@ def train_ZINB_with_val(x,
                         epochs = 150, 
                         PATH = '/home/longlab/Data/Thesis/Data/', 
                         early_stop = False):
+    """
+    Trains a ZINB-Grad model with validation
+    
+    The function will train a ZINB-Grad model with validation using an optimizer for a number of epochs, and it 
+    will return losses, negative log-likelihood, and validation losses which were obtained during the training procedure. 
+    The function will save the model with best validation loss, and it uses early stopping to avoid overfitting. 
+    In the early stopping the model with best validation loss will be loaded. 
+    
+    Parameters
+    ----------
+    x : `torch.Tensor`
+        It is the data for training, a Tensor of shape (n_samples, n_features). 
+    val_data : `torch.Tensor`
+        It is the validation data, a Tensor of shape (n_samples_val, n_features). 
+    optimizer: An object of `torch.optim.Optimizer`
+        For more details, please refer to Pytorch documentation.
+    model: An object of the `ZINB_Grad` class
+        Please refer to the example.
+    device : A `torch.device` object
+        Please refer to Pytorch documentation for more details.
+    X_val : `torch.Tensor` (optional, default=None)
+        It is the X parameter of the ZINB-Grad model for the validation samples, a Tensor of shape (n_samples_val, M).
+    epochs : int (optional, default=150)
+        Number of iteration for training.
+    early_stop : bool (optional, default=False)
+        If True the function will use early stopping.
+    PATH : str
+        The path to save the best model.
+        
+    
+    Returns
+    -------
+    losses : list
+         A list consisting of the loss of each epoch. 
+    neg_log_liks : list
+         A list consisting of the negative Log-likelihood of each epoch.
+    val_losses : list
+         A list consisting of the validation losses of each validation step.
+        
+    """
     
     losses = []
     neg_log_liks = []
@@ -261,18 +424,41 @@ def train_ZINB_with_val(x,
 def val_ZINB(val_data, model, device, epochs = 15, X_val= None): 
     
 
-    """ 
+    """
+    Returns the validation loss and negative log-likelihood
+    
+    The function will perform the validation on a ZINB-Grad model.
     The following parameters would be the same during the validation process: 
-        `log_theta`, `beta_mu, `beta_pi`, `alpha_mu`, and `alpha_pi`.
+        `log_theta`, `beta_mu, `beta_pi`, `alpha_mu`, and `alpha_pi`, and they will 
+    not be updated.
     
     However, the `W`, `gamma_mu`, and `gamma_pi` would change because their 
-    dimension depend on the number of samples (They are sample specific), 
-    which will change with validation.
+    dimension depend on the number of samples, i.e., are sample specific. 
     
+    Parameters
+    ----------
+    val_data : `torch.Tensor`
+        It is the validation data, a Tensor of shape (n_samples_val, n_features). 
+    model: An object of the `ZINB_Grad` class
+        Please refer to the example.
+    device : A `torch.device` object
+        Please refer to Pytorch documentation for more details.
+    epochs : int (optional, default=15)
+        Number of iteration for training.
+    X_val : `torch.Tensor` (optional, default=None)
+        It is the X parameter of the ZINB-Grad model for the validation samples, a Tensor of shape (n_samples_val, M).
+
+    
+    Returns
+    -------
+    loss : float
+         The validation loss 
+    neg_log_lik : float
+         The validation negative log-likelihood
     """
     
 
-    model_val = ZINB_WaVE(Y = val_data,
+    model_val = ZINB_Grad(Y = val_data,
                           X= X_val,
                           device=device,
                           K = model.K,

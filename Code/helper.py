@@ -49,41 +49,49 @@ def kmeans(data,
         
     return sil_coeff
 
-def plot_si(sil_coeff):
-        
-    """Silhouette plot"""
-    
-    plt.style.use("fivethirtyeight")
-    plt.plot(range(2, 10), sil_coeff)
-    plt.xticks(range(2, 10))
-    plt.xlabel("Number of Clusters")
-    plt.ylabel("Silhouette Coefficient")
-    plt.show()
-    # plt.savefig(base_dir + 'test1.png')
-
-def plot_loss(losses, xlab = 'Epoch', ylab = 'Neg-Loglikelihood'):
-    
+def plot_line (x, y, 
+               line_style = None,
+               axis_x_ticks = None,
+               color = 'blue', 
+               xlab = "Number of epochs", 
+               ylab = 'Neg-Loglikelihood'):
     '''
-    This function will plot the tracked losses during training. 
-    
+    A simple function to graph the plot lines with customized options.
+  
     Parameters
     ----------
-    losses : list 
-        The losses.
-    
+    y : list 
+        The y coordinate of the points.
+    x : list
+        The x coordinate of the points.
     xlab : str
         The x axis label.
-    
     ylab : str
         The y axis label.
     '''
-    
-    x = np.arange(len(losses))
-    y = np.array(losses)
-    
-    plt.plot(x, y)
-    plt.ylabel(ylab)
-    plt.xlabel(xlab)
+
+    fig, ax = plt.subplots()
+      
+    if line_style == None: 
+      ax.plot(x, y, color = color)
+    else: 
+      ax.plot(x, y, line_style, color = color)
+      
+    if axis_x_ticks != None: 
+      ax.set_xticks(axis_x_ticks)
+      ax.set_xticklabels(axis_x_ticks)
+      
+    ax.spines["top"].set_color(None)
+    ax.spines["right"].set_color(None)
+    ax.spines["bottom"].set_color("black")
+    ax.spines["left"].set_color("black")
+    ax.set_ylabel(ylab)
+    ax.set_xlabel(xlab)
+    ax.set_facecolor('white')
+    fig.set_facecolor('white')
+    plt.grid(None)
+    plt.show()
+
 
 
 def measure_q(data, Groups= None, n_clusters=6,  

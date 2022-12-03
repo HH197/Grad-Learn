@@ -1,6 +1,6 @@
 
 # ZINB-Grad: A Gradient Based Linear Model Outperforming Deep Models
-scRNA-seq experiments are powerful, but they suffer from technical noise, dropouts, batch effects, and biases (See Link for more details). 
+scRNA-seq experiments are powerful, but they suffer from technical noise, dropouts, batch effects, and biases (See this [link](https://github.com/HH197/Deep-Generative-Modeling-and-Probabilistic-Dimension-Reduction#challenges-in-analyzing-single-cell-rna-eq-data) for more details). 
 
 Many statistical and machine learning methods have been designed to overcome these challenges. In recent years, there has been a shift from traditional statistical models to deep learning models. But are deep models better for scRNA-seq data analysis? 
 
@@ -36,12 +36,12 @@ Our development shows that a conventional model optimized with the proper techni
 ├── Figures/                                    : Contains all plots and graphs 
 ├── Code/                                       : Contains the implementation of ZINB-Grad, along with helper functions for analysis
 ├── Experiments/                                : Contains Python scripts to perform generalization and run-time tests
-├── Notebooks/                                  : Contains notebooks for experiments
+├── Notebooks/                                  : Contains a notebook of various experiments
 └── README.md                                   : Project description and results
 ```
 <br />
 
-## ZINB-WaVE 
+## ZINB-WaVE
 
 ZINB-WaVE is a generalized linear mixed model (GLMM) which captures the technical variability through two known random variables and maps the data onto a biologically meaningful low-dimensional representation through a linear transformation. ZINB-WaVE extracts low-dimensional representation from the data by considering dropouts, over-dispersion, batch effects, and the count nature of the data. 
 
@@ -131,6 +131,8 @@ We evaluated the accountability for technical variability by assessing batch ent
 <img width="600" height="600" src="https://github.com/HH197/ZINB-Grad/blob/main/Figures/batch_ncorrected_clusters.png">
 </p>
 
+These graphs show clearly that without performing batch correction, the technical variability will cause the cells in the same cluster (cell population) to construct different clusters, which will be misleading in the downstream analysis.
+
 - The following figure show the latent space of the ZINB-Grad when batch annotations are considered (Blue dots are Batch 1 and Green dots are Batch 2): 
 
 <p align="center">
@@ -143,7 +145,7 @@ We evaluated the accountability for technical variability by assessing batch ent
 <img width="600" height="600" src="https://github.com/HH197/ZINB-Grad/blob/main/Figures/batch_corrected_clusters.png">
 </p>
 
-These graphs show clearly that without performing batch correction, the technical variability will cause the cells in the same cell population to construct different clusters, which will be misleading in the downstream analysis. Moreover, it shows that after considering batch annotations, ZINB-Grad accounts for the technical variability and results in a biologically meaningful latent space.
+These graphs show that after considering batch annotations, ZINB-Grad accounts for the technical variability and results in a biologically meaningful latent space.
 
 We used the entropy of batch mixing to measure the batch effect correction. We randomly selected 100 cells from batches and found 50 nearest neighbors of each randomly chosen cell to calculate the average regional Shanon entropy of all 100 cells. The procedure is repeated for 100 iterations, and the average of the iterations is considered as the batch mixing score. We could not use ZINB-WaVE for the RETINA data set as it was too large for ZINB-WaVE to handle. The batch mixing scores for scVI and ZINB-Grad are 0.64 and 0.54, respectively.  
 

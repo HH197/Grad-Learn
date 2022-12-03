@@ -1,6 +1,6 @@
 
 '''
-This code will do the necessary pre-processing steps on single-cell RNA-seq datasets.
+Loading single-cell RNA-seq datasets with necessary pre-processing steps.
 @author: HH197
 '''
 
@@ -20,37 +20,45 @@ from torch.utils.data import Sampler
 class CORTEX(Dataset):
     
     ''' 
-    The Dataset class with necessary pre-processing steps for the gold standard
-    Zeisel data set.
+    Loads CORTEX dataset.
     
+    
+    A class with necessary pre-processing steps for the gold standard
+    Zeisel data set which contains 3005 mouse cortex cells and gold-standard
+    labels for seven distinct cell types. Each cell type corresponds
+    to a cluster to recover.
+    
+    The pre-processing steps are:
+        
+        1. exctracting the labels of the cell types from the data
+        2. choosing the genes that are transcribed in more than 25 cells 
+        3. Selecting the 558 genes with the highest Variance in the remaining 
+        genes from the previous step
+        4. Performing random permutation of the genes 
+
+    Parameters
+    ----------
+    file_dir : str 
+        The path to the .csv file.
+    n_genes : int 
+        Number of the high variable genes that should be selected.
+    n_cells
+        Total number of cells.
+    data: torch Tensor
+        The data.
+    labels: torch Tensor
+        The labels.
+        
+    Examples
+    --------
+    >>> import data_prep
+    >>> cortex = data_prep.CORTEX()
+    >>> dl = DataLoader(cortex, batch_size= 128, shuffle=True)
     '''
     
     def __init__ (self, 
                   file_dir= "/home/longlab/Data/Thesis/Data/expression_mRNA_17-Aug-2014.txt", 
                   n_genes = 558):
-    
-        '''
-        
-        Performs the pre-processing steps which are:
-        
-        1. exctracting the labels of the cell types from the data
-        2. choosing the genes that are transcribed in more than 25 cells 
-        3. Selecting the 558 genes with the highest Variance in the remaining genes from the previous step
-        4. Performing random permutation of the genes 
-        
-        Attributes
-        ----------
-        file_dir : str 
-            The path to the .csv file.
-        n_genes : int 
-            Number of the high variable genes that should be selected.
-        n_cells
-            Total number of cells.
-        data: torch Tensor
-            The data.
-        labels: torch Tensor
-            The labels.
-        '''
         
         self.file_dir = file_dir
         self.n_genes = n_genes
@@ -99,11 +107,12 @@ class CORTEX(Dataset):
 class Brain_Large(Dataset):
     
     '''
-    The Dataset class with necessary pre-processing steps for the Large brain dataset. 
+    Loads BRAIN data set. 
     
+    
+    A class with necessary pre-processing steps for the Large brain dataset. 
     The variance of the genes for a sub-sample of 10^5 cells will be calculated 
     and the high variable genes (720 by default) will be selected.
-    
     
     The Large brain dataset can be downloaded from the following url:
         "http://cf.10xgenomics.com/samples/cell-exp/1.3.0/1M_neurons/1M_neurons_filtered_gene_bc_matrices_h5.h5"
@@ -123,6 +132,21 @@ class Brain_Large(Dataset):
         
         For more info please visit "https://stackoverflow.com/questions/52299420/scipy-csr-matrix-understand-indptr"
         and "https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.csr_matrix.html"
+        
+    Parameters
+    ----------
+    file_dir: str 
+        The directory of the HDF5 file which should be provided by the user.
+        
+    n_sub_samples: int
+        Number of samples (cells) in the downsampled matrix. Default: 10^5
+    n_select_genes: int
+        Number of the high variable genes to be selected in the pre-processing
+        step. Default: 750
+    low_memory: Boolean
+        If `False`, the whole data will be loaded into memory (high amount of
+        memory required); `True` by default.
+    
     
     Attributes
     ----------
@@ -137,9 +161,15 @@ class Brain_Large(Dataset):
     selected_genes : ndarray
         The indices of selected high variable genes.
     low_memory : boolean
-        Whether perform data loading with memory efficiency or not.
+        Whether perform data loading with memory efficiency or not. 
     matrix : scipy csc_matrix
-        If `low_memory` is False, the whole data otherwise `None`.
+        If `low_memory` is False, it is the whole data otherwise `None`.
+        
+    Examples
+    --------
+    >>> import data_prep
+    >>> brain = data_prep.Brain_Large()
+    >>> dl = DataLoader(brain, batch_size= batch_size, shuffle=True)
         
      '''
     def __init__(self, 
@@ -147,29 +177,6 @@ class Brain_Large(Dataset):
                  n_sub_samples = 10**5, 
                  n_select_genes = 720, 
                  low_memory = True):
-        
-        '''
-        Initialize the Brain_Large Dataset class
-        
-        It will performs the necessary pre-processing steps for selecting the high variable genes 
-        and set the indices of them.
-        
-        
-        Parameters
-        ----------
-        file_dir: str 
-            The directory of the HDF5 file which should be provided by the user.
-            
-        n_sub_samples: int
-            Number of samples (cells) in the downsampled matrix. Default: 10^5
-        n_select_genes: int
-            Number of the high variable genes to be selected in the pre-processing
-            step. Default: 750
-        low_memory: Boolean
-            If `False`, the whole data will be loaded into memory (high amount of
-            memory required); `True` by default.
-        
-        '''
         
         self.file_dir = file_dir
         self.n_select_genes = n_select_genes
@@ -279,17 +286,17 @@ class Indice_Sampler(Sampler):
     
     Example
     ----------
-        >>> from torch.utils.data import DataLoader
-        >>> brain = Brain_Large()
-        >>> dataloader = torch.utils.data.DataLoader(brain, 
-                                                     batch_size=64, 
-                                                     shuffle=True)
-        >>> a, b = next(iter(dataloader))
-        >>> trainloader_sampler1 = torch.utils.data.DataLoader(brain,
-                                                           batch_size=64,
-                                                           sampler = Brain_Large_Sampler(b),
-                                                           shuffle=False)
-        >>> c, d = next(iter(trainloader_sampler1))
+    >>> from torch.utils.data import DataLoader
+    >>> brain = Brain_Large()
+    >>> dataloader = torch.utils.data.DataLoader(brain, 
+                                                 batch_size=64, 
+                                                 shuffle=True)
+    >>> a, b = next(iter(dataloader))
+    >>> trainloader_sampler1 = torch.utils.data.DataLoader(brain,
+                                                       batch_size=64,
+                                                       sampler = Brain_Large_Sampler(b),
+                                                       shuffle=False)
+    >>> c, d = next(iter(trainloader_sampler1))
         
     '''
     def __init__(self, mask):
@@ -305,9 +312,13 @@ class Indice_Sampler(Sampler):
 class RETINA(Dataset):
     
     '''
-    The Dataset class with necessary pre-processing steps for the RETINA dataset. 
+    Loads RETINA data set. 
     
-    The data provided by Lopez et al. (scvi) is used which can be 
+    
+    
+    A class with necessary pre-processing steps for the RETINA dataset. It seperates the raw count data, the cluster numbers, and batches.  
+    
+    The data provided by Lopez et al. is used which can be 
     downloaded from: https://github.com/YosefLab/scVI-data/raw/master/retina.loom
     The data is in loompy format (http://linnarssonlab.org/loompy/index.html)
     
@@ -319,11 +330,12 @@ class RETINA(Dataset):
     one can use the following github repository: 
         https://github.com/broadinstitute/BipolarCell2016
     
-    
-    Note: 
-        Since the data is not very large (approximately 2GB in memory), the class will
-        load the whole data into memory.
-    
+        
+    Parameters
+    ----------
+    file_dir: str 
+        The directory of the .loom file which should be provided by the user.
+            
     
     Attributes
     ----------
@@ -342,21 +354,22 @@ class RETINA(Dataset):
     cluster : ndarray
         One dimensional array of the assigned cluster numbers by the authors of 
         the original paper.
+        
+    
+    Notes
+    -----
+    Since the data is not very large (approximately 2GB in memory), the class will
+    load the whole data into memory.
+    
+    Examples
+    --------
+    >>> import data_prep
+    >>> retina = data_prep.RETINA()
+    >>> dl = DataLoader(retina, batch_size= batch_size, shuffle=True)    
+
      '''
     def __init__(self, 
                  file_dir = "/home/longlab/Data/Thesis/Data/retina.loom"):
-        
-        '''
-        Initialize the RETINA Dataset class.
-        
-        It seperates the raw count data, the cluster numbers, and batches. 
-        
-        Parameters
-        ----------
-        file_dir: str 
-            The directory of the .loom file which should be provided by the user.
-            
-        '''
         
         self.file_dir = file_dir
         

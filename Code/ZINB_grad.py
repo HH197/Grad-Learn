@@ -281,6 +281,20 @@ def train_ZINB(x, optimizer, model, epochs = 150, val = False):
          A list consisting of the loss of each epoch. 
     neg_log_liks : list
          A list consisting of the negative Log-likelihood of each epoch.
+    
+    Examples
+    --------
+    >>> import ZINB_grad 
+    >>> import data_prep
+    >>> import torch
+    >>> from torch.utils.data import DataLoader
+    >>> cortex = data_prep.CORTEX()
+    >>> y, labels = next(iter(DataLoader(cortex, 
+                                 batch_size= cortex.n_cells,
+                                 shuffle=True)))
+    >>> model = ZINB_grad.ZINB_WaVE(Y = y, K = 10, device =device)
+    >>> optimizer = torch.optim.Adam(model.parameters(), lr = 0.08)
+    >>> losses, neg_log_liks = ZINB_grad.train_ZINB(y, optimizer, model, epochs = 300)
     """
     losses = []
     neg_log_liks = []

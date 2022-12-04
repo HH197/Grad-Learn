@@ -67,5 +67,5 @@ losses, neg_log_liks, val_losses = ZINB_grad.train_ZINB_with_val(y_train,
                                                     
 ```
 
-(to be added Clustering, visualizing the latent space, data imputation)
+(to be added: Clustering, visualizing the latent space, data imputation)
 

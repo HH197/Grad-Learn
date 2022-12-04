@@ -8,7 +8,7 @@
 
 # Requirements
 
-ZINB-Grad requires the following modules:
+ZINB-Grad requires the following frameworks:
 
 - [Pytorch](https://pytorch.org/) 
 - [Pyro](http://pyro.ai/)

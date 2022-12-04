@@ -1,6 +1,6 @@
 
 # ZINB-Grad: A Gradient Based Linear Model Outperforming Deep Models
-scRNA-seq experiments are powerful, but they suffer from technical noise, dropouts, batch effects, and biases (See this [link](https://github.com/HH197/Deep-Generative-Modeling-and-Probabilistic-Dimension-Reduction#challenges-in-analyzing-single-cell-rna-eq-data) for more details). 
+scRNA-seq experiments are powerful, but they suffer from technical noise, dropouts, batch effects, and biases (See this [link](https://github.com/HH197/Deep-Generative-Modeling-and-Probabilistic-Dimension-Reduction#challenges-in-analyzing-single-cell-rna-eq-data) for more detail). 
 
 Many statistical and machine learning methods have been designed to overcome these challenges. In recent years, there has been a shift from traditional statistical models to deep learning models. But are deep models better for scRNA-seq data analysis? 
 

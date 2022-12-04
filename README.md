@@ -32,7 +32,6 @@ Our development shows that a conventional model optimized with the proper techni
 
 ## Project Organization
 ```
-.
 ├── Figures/                                    : Contains all plots and graphs 
 ├── Code/                                       : Contains the implementation of ZINB-Grad, along with helper functions for analysis
 ├── Experiments/                                : Contains Python scripts to perform generalization and run-time tests

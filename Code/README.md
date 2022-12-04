@@ -55,7 +55,7 @@ train, test = random_split(cortex, [cortex.n_cells-test_size, test_size])
 y_train, labels_train = train[:]
 y_test, labels_test = test[:]
 
-model = ZINB_grad.ZINB_WaVE(Y = y_train, K = 10, device = device)
+model = ZINB_grad.ZINB_Grad(Y = y_train, K = 10, device = device)
 optimizer = torch.optim.Adam(model.parameters(), lr = 0.08)
 losses, neg_log_liks, val_losses = ZINB_grad.train_ZINB_with_val(y_train,
                                                     y_test, 

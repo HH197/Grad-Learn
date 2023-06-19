@@ -11,3 +11,17 @@
 *.bin
 *.h5
 
+# virtualenv
+.venv
+venv/
+ENV/
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# mkdocs documentation
+/site
+
+# PyCharm
+.idea/

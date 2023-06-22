@@ -4,8 +4,8 @@ high-performance scalability, and memory-efficient estimation.
 @author: HH197
 """
 import torch
-from torch import nn
 from pyro.distributions import ZeroInflatedNegativeBinomial as ZINB
+from torch import nn
 
 
 class ZINB_Grad(nn.Module):
@@ -103,79 +103,78 @@ class ZINB_Grad(nn.Module):
         self.V = V
         self.K = K
 
-        if log_theta == None:
-            self.log_theta = nn.Parameter(torch.rand((1, self.J)))
-        else:
+        if log_theta:
             self.log_theta = log_theta
-
-        if X == None:
-            self.X = torch.ones((self.n, 1)).to(device)
-
-            if beta_mu == None:
-                self.beta_mu = nn.Parameter(torch.rand((1, self.J)))
-            else:
-                self.beta_mu = beta_mu
-
-            if beta_pi == None:
-                self.beta_pi = nn.Parameter(torch.rand((1, self.J)))
-            else:
-                self.beta_pi = beta_pi
-
         else:
+            self.log_theta = nn.Parameter(torch.rand((1, self.J)))
+
+        if X:
             _, self.M = X.size()
             self.X = X.to(device)
 
-            if beta_mu == None:
-                self.beta_mu = nn.Parameter(torch.rand(self.M, self.J))
-            else:
+            if beta_mu:
                 self.beta_mu = beta_mu
-
-            if beta_pi == None:
-                self.beta_pi = nn.Parameter(torch.rand(self.M, self.J))
             else:
+                self.beta_mu = nn.Parameter(torch.rand(self.M, self.J))
+
+            if beta_pi:
                 self.beta_pi = beta_pi
-
-        if V == None:
-            self.V = torch.ones((self.J, 1)).to(device)
-
-            if gamma_mu == None:
-                self.gamma_mu = nn.Parameter(torch.rand((1, self.n)))
             else:
-                self.gamma_mu = gamma_mu
-
-            if gamma_pi == None:
-                self.gamma_pi = nn.Parameter(torch.rand((1, self.n)))
-            else:
-                self.gamma_pi = gamma_pi
-
+                self.beta_pi = nn.Parameter(torch.rand(self.M, self.J))
         else:
+            self.X = torch.ones((self.n, 1)).to(device)
+
+            if beta_mu:
+                self.beta_mu = beta_mu
+            else:
+                self.beta_mu = nn.Parameter(torch.rand((1, self.J)))
+
+            if beta_pi:
+                self.beta_pi = beta_pi
+            else:
+                self.beta_pi = nn.Parameter(torch.rand((1, self.J)))
+
+        if V:
             _, self.L = V.size()
             self.V = V.to(device)
 
-            if gamma_mu == None:
-                self.gamma_mu = nn.Parameter(torch.rand((self.L, self.n)))
-            else:
+            if gamma_mu:
                 self.gamma_mu = gamma_mu
-
-            if gamma_pi == None:
-                self.gamma_pi = nn.Parameter(torch.rand((self.L, self.n)))
             else:
+                self.gamma_mu = nn.Parameter(torch.rand((self.L, self.n)))
+
+            if gamma_pi:
                 self.gamma_pi = gamma_pi
+            else:
+                self.gamma_pi = nn.Parameter(torch.rand((self.L, self.n)))
 
-        if W == None:
-            self.W = nn.Parameter(torch.rand((self.n, self.K)))
         else:
+            self.V = torch.ones((self.J, 1)).to(device)
+
+            if gamma_mu:
+                self.gamma_mu = gamma_mu
+            else:
+                self.gamma_mu = nn.Parameter(torch.rand((1, self.n)))
+
+            if gamma_pi:
+                self.gamma_pi = gamma_pi
+            else:
+                self.gamma_pi = nn.Parameter(torch.rand((1, self.n)))
+
+        if W:
             self.W = W
-
-        if alpha_mu == None:
-            self.alpha_mu = nn.Parameter(torch.rand((self.K, self.J)))
         else:
+            self.W = nn.Parameter(torch.rand((self.n, self.K)))
+
+        if alpha_mu:
             self.alpha_mu = alpha_mu
-
-        if alpha_pi == None:
-            self.alpha_pi = nn.Parameter(torch.rand((self.K, self.J)))
         else:
+            self.alpha_mu = nn.Parameter(torch.rand((self.K, self.J)))
+
+        if alpha_pi:
             self.alpha_pi = alpha_pi
+        else:
+            self.alpha_pi = nn.Parameter(torch.rand((self.K, self.J)))
 
     def forward(self, x):
         """
@@ -189,8 +188,8 @@ class ZINB_Grad(nn.Module):
         Returns
         -------
         p : torch.Tensor
-             Tensor of shape (n_samples, n_features) which is the probability of failure for each element of
-             data in the ZINB distribution.
+             Tensor of shape (n_samples, n_features) which is the probability of failure
+              for each element of data in the ZINB distribution.
         """
         self.log_mu = (
             self.X @ self.beta_mu + self.gamma_mu.T @ self.V.T + self.W @ self.alpha_mu
@@ -211,8 +210,8 @@ class ZINB_Grad(nn.Module):
         """
          Returns the loss
 
-         A method to calculate the negative log-likelihood, along with the regularization penalty.
-         The regularization is applied to avoid overfitting.
+         A method to calculate the negative log-likelihood, along with the
+         regularization penalty. The regularization is applied to avoid overfitting.
 
          Parameters
          ----------
@@ -261,8 +260,9 @@ def train_ZINB(x, optimizer, model, epochs=150, val=False):
     """
     Trains a ZINB-Grad model
 
-    The function will train a ZINB-Grad model using an optimizer for a number of epochs, and it
-    will return both losses and negative log-likelihood, which were obtained during the training procedure.
+    The function will train a ZINB-Grad model using an optimizer for a number of epochs,
+     and it will return both losses and negative log-likelihood, which were obtained
+     during the training procedure.
 
     Parameters
     ----------
@@ -343,10 +343,12 @@ def train_ZINB_with_val(
     """
     Trains a ZINB-Grad model with validation
 
-    The function will train a ZINB-Grad model with validation using an optimizer for a number of epochs, and it
-    will return losses, negative log-likelihood, and validation losses which were obtained during the training procedure.
-    The function will save the model with best validation loss, and it uses early stopping to avoid overfitting.
-    In the early stopping the model with best validation loss will be loaded.
+    The function will train a ZINB-Grad model with validation using an optimizer for a
+    number of epochs, and it will return losses, negative log-likelihood, and validation
+     losses which were obtained during the training procedure.
+    The function will save the model with the best validation loss, and it uses early
+    stopping to avoid overfitting. In the early stopping the model with the best
+    validation loss will be loaded.
 
     Parameters
     ----------
@@ -361,7 +363,8 @@ def train_ZINB_with_val(
     device : A `torch.device` object
         Please refer to Pytorch documentation for more details.
     X_val : `torch.Tensor` (optional, default=None)
-        It is the X parameter of the ZINB-Grad model for the validation samples, a Tensor of shape (n_samples_val, M).
+        It is the X parameter of the ZINB-Grad model for the validation samples, a
+        Tensor of shape (n_samples_val, M).
     epochs : int (optional, default=150)
         Number of iteration for training.
     early_stop : bool (optional, default=False)
@@ -458,7 +461,8 @@ def val_ZINB(val_data, model, device, epochs=15, X_val=None):
     epochs : int (optional, default=15)
         Number of iteration for training.
     X_val : `torch.Tensor` (optional, default=None)
-        It is the X parameter of the ZINB-Grad model for the validation samples, a Tensor of shape (n_samples_val, M).
+        It is the X parameter of the ZINB-Grad model for the validation samples, a
+        Tensor of shape (n_samples_val, M).
 
 
     Returns

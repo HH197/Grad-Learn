@@ -1,21 +1,19 @@
 """
-This contains all of the helper functions for experiments and visualizations.
+This contains all helper functions for experiments and visualizations.
 @author: HH197
-
 """
 
 import numpy as np
+import scipy.sparse
+from matplotlib import pyplot as plt
 
 # import seaborn as sn
 from sklearn import metrics
-from sklearn.cluster import KMeans
-from matplotlib import pyplot as plt
+from sklearn.cluster import AgglomerativeClustering, KMeans
+from sklearn.manifold import TSNE
 
 # from pandas import DataFrame
 from sklearn.neighbors import NearestNeighbors
-import scipy.sparse
-from sklearn.manifold import TSNE
-from sklearn.cluster import AgglomerativeClustering
 
 
 def kmeans(
@@ -31,8 +29,8 @@ def kmeans(
     """
     Performs K-means on the data
 
-    Perfoms K-means on the data (usually latent space of a model) for various number of clusters
-    and returns a list containing average Silhouette width.
+    The function perfoms K-means on the data (usually latent space of a model) for
+    various number of clusters and returns a list containing average Silhouette width.
 
     Parameters
     ----------
@@ -81,12 +79,12 @@ def plot_line(
 
     fig, ax = plt.subplots()
 
-    if line_style == None:
-        ax.plot(x, y, color=color)
-    else:
+    if line_style:
         ax.plot(x, y, line_style, color=color)
+    else:
+        ax.plot(x, y, color=color)
 
-    if axis_x_ticks != None:
+    if axis_x_ticks:
         ax.set_xticks(axis_x_ticks)
         ax.set_xticklabels(axis_x_ticks)
 
@@ -127,7 +125,7 @@ def measure_q(
     n_clusters : int
         The number of clusters in K-means.
     """
-    Groups = np.ndarray.astype(Groups, np.int)
+    Groups = np.ndarray.astype(Groups, int)
 
     kmeans = KMeans(n_clusters, **kmeans_kwargs)
     kmeans.fit(data)
@@ -174,7 +172,8 @@ def corrupting(data, p=0.10, method="Uniform", percentage=0.10):
         The probability of success in Bernoulli or Binomial distribution.
 
     method: str
-        Specifies the method of data corruption, one of the two options: "Uniform" and "Binomial"
+        Specifies the method of data corruption, one of the two options: "Uniform" and
+        "Binomial"
 
     percentage: float >0 and <1.
         The percentage of non-zero elements to be selected for corruption.
@@ -197,7 +196,7 @@ def corrupting(data, p=0.10, method="Uniform", percentage=0.10):
 
     elif method == "Binomial":
         data_c[x[ind], y[ind]] = np.random.binomial(
-            data_c[x[ind], y[ind]].astype(np.int), p
+            data_c[x[ind], y[ind]].astype(int), p
         )
 
     else:
@@ -241,10 +240,10 @@ def entropy(batches):
 
     Entropy of mixing for c different batches is defined as:
 
-        $$E = - \sum_{i=1}^c x_i \log x_i$$
+        $$E = - \\sum_{i=1}^c x_i \\log x_i$$
 
     where $x_i$ is the proportion of cells from batch i in a given region, such
-    that $\sum_{i=1}^c x_i = 1$.
+    that $\\sum_{i=1}^c x_i = 1$.
 
     Parameters
     ----------

@@ -3,16 +3,14 @@ Loading single-cell RNA-seq datasets with necessary pre-processing steps.
 @author: HH197
 """
 
+import h5py
+import loompy
 import numpy as np
 import pandas as pd
 import torch
-import h5py
-import loompy
-
 from scipy.sparse import csc_matrix, csr_matrix, vstack
 from sklearn.preprocessing import StandardScaler
-from torch.utils.data import Dataset
-from torch.utils.data import Sampler
+from torch.utils.data import Dataset, Sampler
 
 
 class CORTEX(Dataset):
@@ -114,23 +112,28 @@ class Brain_Large(Dataset):
     and the high variable genes (720 by default) will be selected.
 
     The Large brain dataset can be downloaded from the following url:
-        "http://cf.10xgenomics.com/samples/cell-exp/1.3.0/1M_neurons/1M_neurons_filtered_gene_bc_matrices_h5.h5"
+    "http://cf.10xgenomics.com/samples/cell-exp/1.3.0/1M_neurons/1M_neurons_filtered_gene_bc_matrices_h5.h5"
 
-    The data is in HDF5 format which can be easily accessed and processed with the `h5py` library.
+    The data is in HDF5 format which can be easily accessed and processed with the
+    `h5py` library.
 
     The data contains:
 
-        barcodes: This contains information of the batch number which can be used for batch correction.
+        barcodes: This contains information of the batch number which can be used for
+        batch correction.
 
         `gene_names` contains the gene names.
         `genes` contains the Ensembl Gene id such as: 'ENSMUSG00000089699'
         `data` is an array containing all the non zero elements of the sparse matrix
-        `indices` is an array mapping each element in `data` to its column in the sparse matrix.
+        `indices` is an array mapping each element in `data` to its column in the sparse
+         matrix.
         `indptr` maps the elements of data and indices to the rows of the sparse matrix.
         `shape` the dimension of the sparse matrix
 
-        For more info please visit "https://stackoverflow.com/questions/52299420/scipy-csr-matrix-understand-indptr"
-        and "https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.csr_matrix.html"
+        For more info please visit
+        https://stackoverflow.com/questions/52299420/scipy-csr-matrix-understand-indptr
+        and
+        "https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.csr_matrix.html"
 
     Parameters
     ----------
@@ -174,7 +177,10 @@ class Brain_Large(Dataset):
 
     def __init__(
         self,
-        file_dir="/home/longlab/Data/Thesis/Data/1M_neurons_filtered_gene_bc_matrices_h5.h5",
+        file_dir=(
+            "/home/longlab/Data/Thesis/Data/",
+            "1M_neurons_filtered_gene_bc_matrices_h5.h5",
+        ),
         n_sub_samples=10**5,
         n_select_genes=720,
         low_memory=True,
@@ -206,7 +212,7 @@ class Brain_Large(Dataset):
             # choosing high variable genes
             self.selected_genes = np.argsort(scale.var_ * -1)[: self.n_select_genes]
 
-        if low_memory == False:
+        if not low_memory:
             del sub_sampled, scale, indptr_sub_samp
             print("Loading the whole dataset")
 
@@ -216,7 +222,9 @@ class Brain_Large(Dataset):
                 data = f["mm10"]
                 index_partitioner = data["indptr"][...]
 
-                # The following code is from the scvi package (https://github.com/scverse/scvi-tools)
+                # The following code is from the scvi package
+                # (https://github.com/scverse/scvi-tools)
+
                 for i in range(n_iters):
                     print(f"Reading batch {i+1}")
                     index_partitioner_batch = index_partitioner[
@@ -324,7 +332,8 @@ class RETINA(Dataset):
 
 
 
-    A class with necessary pre-processing steps for the RETINA dataset. It seperates the raw count data, the cluster numbers, and batches.
+    A class with necessary pre-processing steps for the RETINA dataset. It seperates
+    the raw count data, the cluster numbers, and batches.
 
     The data provided by Lopez et al. is used which can be
     downloaded from: https://github.com/YosefLab/scVI-data/raw/master/retina.loom

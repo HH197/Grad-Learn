@@ -1,3 +1,20 @@
+# Most of the file is adopted from Scikit-Learn
+
+[tool.black]
+line-length = 88
+target_version = ['py38', 'py39', 'py310']
+preview = true
+exclude = '''
+/(
+    \.eggs         # exclude a few common directories in the
+  | \.git          # root of the project
+  | \.mypy_cache
+  | doc/_build
+  | experiments
+)/
+'''
+
+
 [tool.ruff]
 # all rules can be found here: https://beta.ruff.rs/docs/rules/
 select = ["E", "F", "W", "I"]
@@ -13,5 +30,12 @@ ignore=[
     "E731",
     # do not use variables named 'l', 'O', or 'I'
     "E741",
+]
+
+exclude=[
+    ".git",
+    "__pycache__",
+    "doc/*",
+    "experiments/*",
 ]
 

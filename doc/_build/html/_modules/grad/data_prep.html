@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>grad.data_prep &mdash; Grad-Learn 0.1.0 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Grad-Learn
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_autosummary/grad.html">grad</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Grad-Learn</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">grad.data_prep</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for grad.data_prep</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Loading single-cell RNA-seq datasets with necessary pre-processing steps.</span>
+<span class="sd">@author: HH197</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">h5py</span>
+<span class="kn">import</span> <span class="nn">loompy</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">from</span> <span class="nn">scipy.sparse</span> <span class="kn">import</span> <span class="n">csc_matrix</span><span class="p">,</span> <span class="n">csr_matrix</span><span class="p">,</span> <span class="n">vstack</span>
+<span class="kn">from</span> <span class="nn">sklearn.preprocessing</span> <span class="kn">import</span> <span class="n">StandardScaler</span>
+<span class="kn">from</span> <span class="nn">torch.utils.data</span> <span class="kn">import</span> <span class="n">Dataset</span><span class="p">,</span> <span class="n">Sampler</span>
+
+
+<div class="viewcode-block" id="CORTEX"><a class="viewcode-back" href="../../_autosummary/grad.data_prep.CORTEX.html#grad.data_prep.CORTEX">[docs]</a><span class="k">class</span> <span class="nc">CORTEX</span><span class="p">(</span><span class="n">Dataset</span><span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Loads CORTEX dataset.</span>
+
+
+<span class="sd">    A class with necessary pre-processing steps for the gold standard</span>
+<span class="sd">    Zeisel data set which contains 3005 mouse cortex cells and gold-standard</span>
+<span class="sd">    labels for seven distinct cell types. Each cell type corresponds</span>
+<span class="sd">    to a cluster to recover.</span>
+
+<span class="sd">    The pre-processing steps are:</span>
+
+<span class="sd">        1. exctracting the labels of the cell types from the data</span>
+<span class="sd">        2. choosing the genes that are transcribed in more than 25 cells</span>
+<span class="sd">        3. Selecting the 558 genes with the highest Variance in the remaining</span>
+<span class="sd">        genes from the previous step</span>
+<span class="sd">        4. Performing random permutation of the genes</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    file_dir : str</span>
+<span class="sd">        The path to the .csv file.</span>
+<span class="sd">    n_genes : int</span>
+<span class="sd">        Number of the high variable genes that should be selected.</span>
+<span class="sd">    n_cells:</span>
+<span class="sd">        Total number of cells.</span>
+<span class="sd">    data: torch Tensor</span>
+<span class="sd">        The data.</span>
+<span class="sd">    labels: torch Tensor</span>
+<span class="sd">        The labels.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import data_prep</span>
+<span class="sd">    &gt;&gt;&gt; cortex = data_prep.CORTEX()</span>
+<span class="sd">    &gt;&gt;&gt; dl = DataLoader(cortex, batch_size= 128, shuffle=True)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">file_dir</span><span class="o">=</span><span class="s2">&quot;/home/longlab/Data/Thesis/Data/expression_mRNA_17-Aug-2014.txt&quot;</span><span class="p">,</span>
+        <span class="n">n_genes</span><span class="o">=</span><span class="mi">558</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">file_dir</span> <span class="o">=</span> <span class="n">file_dir</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_genes</span> <span class="o">=</span> <span class="n">n_genes</span>
+
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file_dir</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">low_memory</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="c1"># Groups of cells, i.e. labels</span>
+        <span class="n">Groups</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">7</span><span class="p">,]</span>
+
+        <span class="n">Groups</span> <span class="o">=</span> <span class="n">Groups</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">Groups</span><span class="p">,</span> <span class="n">return_inverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">df1</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">10</span><span class="p">:]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">df1</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="s2">&quot;tissue&quot;</span><span class="p">,</span> <span class="s2">&quot;Unnamed: 0&quot;</span><span class="p">],</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">df1</span> <span class="o">=</span> <span class="n">df1</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+
+        <span class="c1"># choosing genes that are transcribed in more than 25 cells</span>
+        <span class="n">rows</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">df1</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
+        <span class="n">df1</span> <span class="o">=</span> <span class="n">df1</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="o">.</span><span class="n">tolist</span><span class="p">(</span><span class="n">rows</span><span class="p">)]</span>
+
+        <span class="n">data</span> <span class="o">=</span> <span class="n">df1</span><span class="o">.</span><span class="n">values</span>
+
+        <span class="c1"># sorting the data based on the variance</span>
+        <span class="n">rows</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">rows</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_genes</span><span class="p">,</span> <span class="p">:]</span>  <span class="c1"># choosing high variable genes</span>
+
+        <span class="c1"># Permutation on features (they were sorted)</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">197</span><span class="p">)</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">permutation</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">p</span><span class="p">,</span> <span class="p">:]</span>
+
+        <span class="n">y</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">T</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_cells</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">labels</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_cells</span>
+
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">index</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">[</span><span class="n">index</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="Brain_Large"><a class="viewcode-back" href="../../_autosummary/grad.data_prep.Brain_Large.html#grad.data_prep.Brain_Large">[docs]</a><span class="k">class</span> <span class="nc">Brain_Large</span><span class="p">(</span><span class="n">Dataset</span><span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Loads BRAIN data set.</span>
+
+
+<span class="sd">    A class with necessary pre-processing steps for the Large brain dataset.</span>
+<span class="sd">    The variance of the genes for a sub-sample of 10^5 cells will be calculated</span>
+<span class="sd">    and the high variable genes (720 by default) will be selected.</span>
+
+<span class="sd">    The Large brain dataset can be downloaded from the following url:</span>
+<span class="sd">    &quot;http://cf.10xgenomics.com/samples/cell-exp/1.3.0/1M_neurons/1M_neurons_filtered_gene_bc_matrices_h5.h5&quot;</span>
+
+<span class="sd">    The data is in HDF5 format which can be easily accessed and processed with the</span>
+<span class="sd">    `h5py` library.</span>
+
+<span class="sd">    The data contains:</span>
+
+<span class="sd">        barcodes: This contains information of the batch number which can be used for</span>
+<span class="sd">        batch correction.</span>
+
+<span class="sd">        `gene_names` contains the gene names.</span>
+<span class="sd">        `genes` contains the Ensembl Gene id such as: &#39;ENSMUSG00000089699&#39;</span>
+<span class="sd">        `data` is an array containing all the non zero elements of the sparse matrix</span>
+<span class="sd">        `indices` is an array mapping each element in `data` to its column in the sparse</span>
+<span class="sd">         matrix.</span>
+<span class="sd">        `indptr` maps the elements of data and indices to the rows of the sparse matrix.</span>
+<span class="sd">        `shape` the dimension of the sparse matrix</span>
+
+<span class="sd">        For more info please visit</span>
+<span class="sd">        https://stackoverflow.com/questions/52299420/scipy-csr-matrix-understand-indptr</span>
+<span class="sd">        and</span>
+<span class="sd">        &quot;https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.csr_matrix.html&quot;</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    file_dir: str</span>
+<span class="sd">        The directory of the HDF5 file which should be provided by the user.</span>
+
+<span class="sd">    n_sub_samples: int</span>
+<span class="sd">        Number of samples (cells) in the downsampled matrix. Default: 10^5</span>
+<span class="sd">    n_select_genes: int</span>
+<span class="sd">        Number of the high variable genes to be selected in the pre-processing</span>
+<span class="sd">        step. Default: 750</span>
+<span class="sd">    low_memory: Boolean</span>
+<span class="sd">        If `False`, the whole data will be loaded into memory (high amount of</span>
+<span class="sd">        memory required); `True` by default.</span>
+
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    file_dir : str</span>
+<span class="sd">        The directory of the HDF5 file</span>
+<span class="sd">    n_select_genes : int</span>
+<span class="sd">        Number of high variable genes to be selected in the pre-processing step.</span>
+<span class="sd">    n_genes : int</span>
+<span class="sd">        Total number of genes in the data set</span>
+<span class="sd">    n_cells : int</span>
+<span class="sd">        Total number of cells</span>
+<span class="sd">    selected_genes : ndarray</span>
+<span class="sd">        The indices of selected high variable genes.</span>
+<span class="sd">    low_memory : boolean</span>
+<span class="sd">        Whether perform data loading with memory efficiency or not.</span>
+<span class="sd">    matrix : scipy csc_matrix</span>
+<span class="sd">        If `low_memory` is False, it is the whole data otherwise `None`.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import data_prep</span>
+<span class="sd">    &gt;&gt;&gt; brain = data_prep.Brain_Large()</span>
+<span class="sd">    &gt;&gt;&gt; dl = DataLoader(brain, batch_size= batch_size, shuffle=True)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">file_dir</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">&quot;/home/longlab/Data/Thesis/Data/&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;1M_neurons_filtered_gene_bc_matrices_h5.h5&quot;</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="n">n_sub_samples</span><span class="o">=</span><span class="mi">10</span><span class="o">**</span><span class="mi">5</span><span class="p">,</span>
+        <span class="n">n_select_genes</span><span class="o">=</span><span class="mi">720</span><span class="p">,</span>
+        <span class="n">low_memory</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">file_dir</span> <span class="o">=</span> <span class="n">file_dir</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_select_genes</span> <span class="o">=</span> <span class="n">n_select_genes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">low_memory</span> <span class="o">=</span> <span class="n">low_memory</span>
+        <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file_dir</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="s2">&quot;mm10&quot;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">n_genes</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_cells</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;shape&quot;</span><span class="p">]</span>
+
+            <span class="c1"># sub-sampling for choosing high variable genes</span>
+
+            <span class="n">indptr_sub_samp</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;indptr&quot;</span><span class="p">][:</span><span class="n">n_sub_samples</span><span class="p">]</span>
+            <span class="n">last_indx</span> <span class="o">=</span> <span class="n">indptr_sub_samp</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+            <span class="n">sub_sampled</span> <span class="o">=</span> <span class="n">csc_matrix</span><span class="p">(</span>
+                <span class="p">(</span>
+                    <span class="n">data</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][:</span><span class="n">last_indx</span><span class="p">],</span>
+                    <span class="n">data</span><span class="p">[</span><span class="s2">&quot;indices&quot;</span><span class="p">][:</span><span class="n">last_indx</span><span class="p">],</span>
+                    <span class="n">indptr_sub_samp</span><span class="p">,</span>
+                <span class="p">),</span>
+                <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_genes</span><span class="p">,</span> <span class="n">n_sub_samples</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span>
+            <span class="p">)</span>
+
+            <span class="n">scale</span> <span class="o">=</span> <span class="n">StandardScaler</span><span class="p">(</span><span class="n">with_mean</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">scale</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">sub_sampled</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+
+            <span class="c1"># choosing high variable genes</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">selected_genes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">scale</span><span class="o">.</span><span class="n">var_</span> <span class="o">*</span> <span class="o">-</span><span class="mi">1</span><span class="p">)[:</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_select_genes</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">low_memory</span><span class="p">:</span>
+            <span class="k">del</span> <span class="n">sub_sampled</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">indptr_sub_samp</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Loading the whole dataset&quot;</span><span class="p">)</span>
+
+            <span class="n">n_iters</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_cells</span> <span class="o">/</span> <span class="mi">10</span><span class="o">**</span><span class="mi">5</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_cells</span> <span class="o">%</span> <span class="mi">10</span><span class="o">**</span><span class="mi">5</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+
+            <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file_dir</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="s2">&quot;mm10&quot;</span><span class="p">]</span>
+                <span class="n">index_partitioner</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;indptr&quot;</span><span class="p">][</span><span class="o">...</span><span class="p">]</span>
+
+                <span class="c1"># The following code is from the scvi package</span>
+                <span class="c1"># (https://github.com/scverse/scvi-tools)</span>
+
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_iters</span><span class="p">):</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Reading batch </span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="n">index_partitioner_batch</span> <span class="o">=</span> <span class="n">index_partitioner</span><span class="p">[</span>
+                        <span class="p">(</span><span class="n">i</span> <span class="o">*</span> <span class="mi">10</span><span class="o">**</span><span class="mi">5</span><span class="p">)</span> <span class="p">:</span> <span class="p">((</span><span class="mi">1</span> <span class="o">+</span> <span class="n">i</span><span class="p">)</span> <span class="o">*</span> <span class="mi">10</span><span class="o">**</span><span class="mi">5</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+                    <span class="p">]</span>
+                    <span class="n">first_index_batch</span> <span class="o">=</span> <span class="n">index_partitioner_batch</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="n">last_index_batch</span> <span class="o">=</span> <span class="n">index_partitioner_batch</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                    <span class="n">index_partitioner_batch</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="n">index_partitioner_batch</span> <span class="o">-</span> <span class="n">first_index_batch</span>
+                    <span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+                    <span class="n">n_cells_batch</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">index_partitioner_batch</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+                    <span class="n">data_batch</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span>
+                        <span class="n">first_index_batch</span><span class="p">:</span><span class="n">last_index_batch</span>
+                    <span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+                    <span class="n">indices_batch</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;indices&quot;</span><span class="p">][</span>
+                        <span class="n">first_index_batch</span><span class="p">:</span><span class="n">last_index_batch</span>
+                    <span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+                    <span class="n">matrix_batch</span> <span class="o">=</span> <span class="n">csr_matrix</span><span class="p">(</span>
+                        <span class="p">(</span><span class="n">data_batch</span><span class="p">,</span> <span class="n">indices_batch</span><span class="p">,</span> <span class="n">index_partitioner_batch</span><span class="p">),</span>
+                        <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">n_cells_batch</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_genes</span><span class="p">),</span>
+                    <span class="p">)[:,</span> <span class="bp">self</span><span class="o">.</span><span class="n">selected_genes</span><span class="p">]</span>
+                    <span class="c1"># stack on the fly to limit RAM usage</span>
+                    <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="n">matrix</span> <span class="o">=</span> <span class="n">matrix_batch</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">matrix</span> <span class="o">=</span> <span class="n">vstack</span><span class="p">([</span><span class="n">matrix</span><span class="p">,</span> <span class="n">matrix_batch</span><span class="p">])</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">matrix</span> <span class="o">=</span> <span class="n">matrix</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">matrix</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_cells</span>
+
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">low_memory</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file_dir</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="s2">&quot;mm10&quot;</span><span class="p">]</span>
+
+                <span class="c1"># try to initalize the data in init and then use data in the getitem?</span>
+
+                <span class="n">indptr_sub_samp</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;indptr&quot;</span><span class="p">][</span><span class="n">index</span> <span class="p">:</span> <span class="p">(</span><span class="n">index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+                <span class="n">first_indx</span> <span class="o">=</span> <span class="n">indptr_sub_samp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">last_indx</span> <span class="o">=</span> <span class="n">indptr_sub_samp</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">indptr_sub_samp</span> <span class="o">=</span> <span class="p">(</span><span class="n">indptr_sub_samp</span> <span class="o">-</span> <span class="n">first_indx</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+                <span class="n">matrix_batch</span> <span class="o">=</span> <span class="n">csc_matrix</span><span class="p">(</span>
+                    <span class="p">(</span>
+                        <span class="n">data</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="n">first_indx</span><span class="p">:</span><span class="n">last_indx</span><span class="p">],</span>
+                        <span class="n">data</span><span class="p">[</span><span class="s2">&quot;indices&quot;</span><span class="p">][</span><span class="n">first_indx</span><span class="p">:</span><span class="n">last_indx</span><span class="p">],</span>
+                        <span class="n">indptr_sub_samp</span><span class="p">,</span>
+                    <span class="p">),</span>
+                    <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_genes</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+                <span class="p">)</span>
+
+            <span class="n">matrix_batch</span> <span class="o">=</span> <span class="n">matrix_batch</span><span class="o">.</span><span class="n">toarray</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="p">[:,</span> <span class="bp">self</span><span class="o">.</span><span class="n">selected_genes</span><span class="p">]</span>
+            <span class="n">matrix_batch</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">matrix_batch</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">matrix_batch</span><span class="p">,</span> <span class="n">index</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">matrix</span><span class="p">[</span><span class="n">index</span><span class="p">]</span><span class="o">.</span><span class="n">A</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span> <span class="n">index</span></div>
+
+
+<div class="viewcode-block" id="Indice_Sampler"><a class="viewcode-back" href="../../_autosummary/grad.data_prep.Indice_Sampler.html#grad.data_prep.Indice_Sampler">[docs]</a><span class="k">class</span> <span class="nc">Indice_Sampler</span><span class="p">(</span><span class="n">Sampler</span><span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This is a sampler for Pytorch ``DataLoader`` in which it will sample from the</span>
+<span class="sd">    ``Dataset`` with indices of mask.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    mask: ``torch.tensor``</span>
+<span class="sd">        The indices of the samples.</span>
+
+
+<span class="sd">    Example</span>
+<span class="sd">    ----------</span>
+<span class="sd">    &gt;&gt;&gt; from torch.utils.data import DataLoader</span>
+<span class="sd">    &gt;&gt;&gt; brain = Brain_Large()</span>
+<span class="sd">    &gt;&gt;&gt; dataloader = torch.utils.data.DataLoader(brain,</span>
+<span class="sd">                                                 batch_size=64,</span>
+<span class="sd">                                                 shuffle=True)</span>
+<span class="sd">    &gt;&gt;&gt; a, b = next(iter(dataloader))</span>
+<span class="sd">    &gt;&gt;&gt; trainloader_sampler1 = torch.utils.data.DataLoader(brain,</span>
+<span class="sd">                                                       batch_size=64,</span>
+<span class="sd">                                                       sampler = Brain_Large_Sampler(b),</span>
+<span class="sd">                                                       shuffle=False)</span>
+<span class="sd">    &gt;&gt;&gt; c, d = next(iter(trainloader_sampler1))</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mask</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="n">mask</span>
+
+    <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="RETINA"><a class="viewcode-back" href="../../_autosummary/grad.data_prep.RETINA.html#grad.data_prep.RETINA">[docs]</a><span class="k">class</span> <span class="nc">RETINA</span><span class="p">(</span><span class="n">Dataset</span><span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Loads RETINA data set.</span>
+
+
+
+<span class="sd">    A class with necessary pre-processing steps for the RETINA dataset. It seperates</span>
+<span class="sd">    the raw count data, the cluster numbers, and batches.</span>
+
+<span class="sd">    The data provided by Lopez et al. is used which can be</span>
+<span class="sd">    downloaded from: https://github.com/YosefLab/scVI-data/raw/master/retina.loom</span>
+<span class="sd">    The data is in loompy format (http://linnarssonlab.org/loompy/index.html)</span>
+
+<span class="sd">    The original dataset is available under the GEO accession number GSE81904.</span>
+<span class="sd">    https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE81904</span>
+
+<span class="sd">    The webpage consists of the raw matrix, BAM files, Rdata files, and R code.</span>
+<span class="sd">    To perform the pre-processing steps and analyses of the original paper,</span>
+<span class="sd">    one can use the following github repository:</span>
+<span class="sd">        https://github.com/broadinstitute/BipolarCell2016</span>
+
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    file_dir: str</span>
+<span class="sd">        The directory of the .loom file which should be provided by the user.</span>
+
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    file_dir : str</span>
+<span class="sd">        The directory of the HDF5 file.</span>
+
+<span class="sd">    n_genes : int</span>
+<span class="sd">        Total number of genes in the data set.</span>
+
+<span class="sd">    n_cells : int</span>
+<span class="sd">        Total number of cells.</span>
+
+<span class="sd">    batchID : ndarray</span>
+<span class="sd">        One dimensional array of the Batch Ids of cells.</span>
+
+<span class="sd">    cluster : ndarray</span>
+<span class="sd">        One dimensional array of the assigned cluster numbers by the authors of</span>
+<span class="sd">        the original paper.</span>
+
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Since the data is not very large (approximately 2GB in memory), the class will</span>
+<span class="sd">    load the whole data into memory.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import data_prep</span>
+<span class="sd">    &gt;&gt;&gt; retina = data_prep.RETINA()</span>
+<span class="sd">    &gt;&gt;&gt; dl = DataLoader(retina, batch_size= batch_size, shuffle=True)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_dir</span><span class="o">=</span><span class="s2">&quot;/home/longlab/Data/Thesis/Data/retina.loom&quot;</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">file_dir</span> <span class="o">=</span> <span class="n">file_dir</span>
+
+        <span class="k">with</span> <span class="n">loompy</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file_dir</span><span class="p">)</span> <span class="k">as</span> <span class="n">ds</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">ds</span><span class="p">[:,</span> <span class="p">:]</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">n_genes</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_cells</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">shape</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">batchID</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">ca</span><span class="p">[</span><span class="s2">&quot;BatchID&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cluster</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">ca</span><span class="p">[</span><span class="s2">&quot;ClusterID&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_cells</span>
+
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="n">matrix_batch</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">matrix_batch</span><span class="p">,</span> <span class="n">index</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Hamid Hamidi.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

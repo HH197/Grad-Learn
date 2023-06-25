@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>grad.ZINB_grad &mdash; Grad-Learn 0.1.0 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Grad-Learn
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_autosummary/grad.html">grad</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Grad-Learn</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">grad.ZINB_grad</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for grad.ZINB_grad</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">the ZINB-Grad, a gradient-based ZINB GLMM with GPU acceleration,</span>
+<span class="sd">high-performance scalability, and memory-efficient estimation.</span>
+<span class="sd">@author: HH197</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">from</span> <span class="nn">pyro.distributions</span> <span class="kn">import</span> <span class="n">ZeroInflatedNegativeBinomial</span> <span class="k">as</span> <span class="n">ZINB</span>
+<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">nn</span>
+
+
+<div class="viewcode-block" id="ZINB_Grad"><a class="viewcode-back" href="../../_autosummary/grad.ZINB_grad.ZINB_Grad.html#grad.ZINB_grad.ZINB_Grad">[docs]</a><span class="k">class</span> <span class="nc">ZINB_Grad</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The ZINB-Grad model</span>
+
+<span class="sd">    A gradient descent-based stochastic optimization process for the ZINB-WaVE</span>
+<span class="sd">    to overcome the scalability and efficiency challenges inherited in its optimization</span>
+<span class="sd">    procedure. The result of this combination is ZINB-Grad.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    Y : torch.Tensor</span>
+<span class="sd">        Tensor of shape (n_samples, n_features).</span>
+<span class="sd">    device : A `torch.device` object</span>
+<span class="sd">        Please refer to Pytorch documentation for more details.</span>
+<span class="sd">    K : int (optional, default=1)</span>
+<span class="sd">         Number of latent space dimensions</span>
+<span class="sd">    W : torch.Tensor (optional, default=None)</span>
+<span class="sd">        Tensor of shape (n_samples, K).</span>
+<span class="sd">    X : torch.Tensor (optional, default=None)</span>
+<span class="sd">        Known tensor of shape (n_samples, M). M is user definedand is the number of</span>
+<span class="sd">        covariates in X. When X = None, X is a column of ones.</span>
+<span class="sd">    V : torch.Tensor (optional, default=None)</span>
+<span class="sd">        Known tensor of shape (n_features, L). L is user defined and is the number of</span>
+<span class="sd">        covariates in V. When V = None, V is a column of ones.</span>
+<span class="sd">    alpha_mu : torch.Tensor (optional, default=None)</span>
+<span class="sd">        Tensor of shape (K, n_features).</span>
+<span class="sd">    alpha_pi : torch.Tensor (optional, default=None)</span>
+<span class="sd">        Tensor of shape (K, n_features).</span>
+<span class="sd">    beta_mu : torch.Tensor (optional, default=None)</span>
+<span class="sd">        Tensor of shape (M, n_features).</span>
+<span class="sd">    beta_pi : torch.Tensor (optional, default=None)</span>
+<span class="sd">        Tensor of shape (M, n_features).</span>
+<span class="sd">    gamma_mu : torch.Tensor (optional, default=None)</span>
+<span class="sd">        Tensor of shape (L, n_samples).</span>
+<span class="sd">    gamma_pi : torch.Tensor (optional, default=None)</span>
+<span class="sd">        Tensor of shape (L, n_samples).</span>
+<span class="sd">    log_theta : torch.Tensor (optional, default=None)</span>
+<span class="sd">        Tensor of shape (1, n_features). The natural logarithm of the theta parameter in</span>
+<span class="sd">        the ZINB distribution.</span>
+
+
+<span class="sd">    O_mu : torch.Tensor (optional, default=None)</span>
+<span class="sd">        Tensor of shape (n_samples, n_features).</span>
+<span class="sd">    O_pi : torch.Tensor (optional, default=None)</span>
+<span class="sd">        Tensor of shape (n_samples, n_features).</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    n : int</span>
+<span class="sd">        The number of samples</span>
+<span class="sd">    J : int</span>
+<span class="sd">        The number of features (genes)</span>
+<span class="sd">    M : int</span>
+<span class="sd">        The number of covariates (columns) in X.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import ZINB_grad</span>
+<span class="sd">    &gt;&gt;&gt; import torch</span>
+<span class="sd">    &gt;&gt;&gt; import data_prep</span>
+<span class="sd">    &gt;&gt;&gt; cortex = data_prep.CORTEX()</span>
+<span class="sd">    &gt;&gt;&gt; y, labels = next(iter(DataLoader(cortex,</span>
+<span class="sd">                                 batch_size= cortex.n_cells,</span>
+<span class="sd">                                 shuffle=True)))</span>
+<span class="sd">    &gt;&gt;&gt; device = torch.device(&#39;cuda&#39; if torch.cuda.is_available() else &#39;cpu&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; model = ZINB_grad.ZINB_WaVE(Y = y, K = 10, device =device)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">Y</span><span class="p">,</span>
+        <span class="n">device</span><span class="p">,</span>
+        <span class="n">W</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">alpha_mu</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">alpha_pi</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">beta_mu</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">beta_pi</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">gamma_mu</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">gamma_pi</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">log_theta</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">X</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">V</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">O_mu</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">O_pi</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">K</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">J</span> <span class="o">=</span> <span class="n">Y</span><span class="o">.</span><span class="n">size</span><span class="p">()</span>  <span class="c1"># n samples and J genes</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">X</span> <span class="o">=</span> <span class="n">X</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">V</span> <span class="o">=</span> <span class="n">V</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">K</span> <span class="o">=</span> <span class="n">K</span>
+
+        <span class="k">if</span> <span class="n">log_theta</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log_theta</span> <span class="o">=</span> <span class="n">log_theta</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log_theta</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">J</span><span class="p">)))</span>
+
+        <span class="k">if</span> <span class="n">X</span><span class="p">:</span>
+            <span class="n">_</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">M</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">size</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">X</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">beta_mu</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">beta_mu</span> <span class="o">=</span> <span class="n">beta_mu</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">beta_mu</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">M</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">J</span><span class="p">))</span>
+
+            <span class="k">if</span> <span class="n">beta_pi</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">beta_pi</span> <span class="o">=</span> <span class="n">beta_pi</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">beta_pi</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">M</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">J</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">X</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">beta_mu</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">beta_mu</span> <span class="o">=</span> <span class="n">beta_mu</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">beta_mu</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">J</span><span class="p">)))</span>
+
+            <span class="k">if</span> <span class="n">beta_pi</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">beta_pi</span> <span class="o">=</span> <span class="n">beta_pi</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">beta_pi</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">J</span><span class="p">)))</span>
+
+        <span class="k">if</span> <span class="n">V</span><span class="p">:</span>
+            <span class="n">_</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">L</span> <span class="o">=</span> <span class="n">V</span><span class="o">.</span><span class="n">size</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">V</span> <span class="o">=</span> <span class="n">V</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">gamma_mu</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">gamma_mu</span> <span class="o">=</span> <span class="n">gamma_mu</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">gamma_mu</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">L</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">)))</span>
+
+            <span class="k">if</span> <span class="n">gamma_pi</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">gamma_pi</span> <span class="o">=</span> <span class="n">gamma_pi</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">gamma_pi</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">L</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">)))</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">V</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">J</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">gamma_mu</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">gamma_mu</span> <span class="o">=</span> <span class="n">gamma_mu</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">gamma_mu</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">)))</span>
+
+            <span class="k">if</span> <span class="n">gamma_pi</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">gamma_pi</span> <span class="o">=</span> <span class="n">gamma_pi</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">gamma_pi</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">)))</span>
+
+        <span class="k">if</span> <span class="n">W</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">W</span> <span class="o">=</span> <span class="n">W</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">W</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="p">)))</span>
+
+        <span class="k">if</span> <span class="n">alpha_mu</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">alpha_mu</span> <span class="o">=</span> <span class="n">alpha_mu</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">alpha_mu</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">J</span><span class="p">)))</span>
+
+        <span class="k">if</span> <span class="n">alpha_pi</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">alpha_pi</span> <span class="o">=</span> <span class="n">alpha_pi</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">alpha_pi</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">J</span><span class="p">)))</span>
+
+<div class="viewcode-block" id="ZINB_Grad.forward"><a class="viewcode-back" href="../../_autosummary/grad.ZINB_grad.ZINB_Grad.html#grad.ZINB_grad.ZINB_Grad.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">         The forward method of class Module in torch.nn</span>
+
+<span class="sd">         Parameters</span>
+<span class="sd">         ----------</span>
+<span class="sd">         x : torch.Tensor</span>
+<span class="sd">             Tensor of shape (n_samples, n_features).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        p : torch.Tensor</span>
+<span class="sd">             Tensor of shape (n_samples, n_features) which is the probability of failure</span>
+<span class="sd">              for each element of data in the ZINB distribution.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log_mu</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">X</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">beta_mu</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">gamma_mu</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">V</span><span class="o">.</span><span class="n">T</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">W</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha_mu</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log_pi</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">X</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">beta_pi</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">gamma_pi</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">V</span><span class="o">.</span><span class="n">T</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">W</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha_pi</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">mu</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">log_mu</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">theta</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">log_theta</span><span class="p">)</span>
+
+        <span class="c1"># Adaptive regulatory parameters are applied:</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mu</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">theta</span> <span class="o">+</span> <span class="mf">1e-4</span> <span class="o">+</span> <span class="mf">1e-4</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu</span> <span class="o">+</span> <span class="mf">1e-4</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">theta</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">p</span></div>
+
+    <span class="k">def</span> <span class="nf">_loss</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">         Returns the loss</span>
+
+<span class="sd">         A method to calculate the negative log-likelihood, along with the</span>
+<span class="sd">         regularization penalty. The regularization is applied to avoid overfitting.</span>
+
+<span class="sd">         Parameters</span>
+<span class="sd">         ----------</span>
+<span class="sd">         x : torch.Tensor</span>
+<span class="sd">             Tensor of shape (n_samples, n_features).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        loss : float</span>
+<span class="sd">             Sum of the negative log-likelihood for all samples.</span>
+<span class="sd">        pen : float</span>
+<span class="sd">             The regularization term loss.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">J</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">eps_W</span> <span class="o">=</span> <span class="n">J</span> <span class="o">/</span> <span class="n">n</span>
+        <span class="n">eps_alpha_mu</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">eps_alpha_pi</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">eps_theta</span> <span class="o">=</span> <span class="n">J</span>
+
+        <span class="n">loss</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">ZINB</span><span class="p">(</span>
+                <span class="n">total_count</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">log_theta</span><span class="p">),</span> <span class="n">probs</span><span class="o">=</span><span class="n">p</span><span class="p">,</span> <span class="n">gate_logits</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">log_pi</span>
+            <span class="p">)</span>
+            <span class="o">.</span><span class="n">log_prob</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+        <span class="p">)</span>
+
+        <span class="n">pen</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">eps_W</span> <span class="o">*</span> <span class="n">torch</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">W</span><span class="p">,</span> <span class="nb">ord</span><span class="o">=</span><span class="s2">&quot;fro&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">square</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">()</span> <span class="o">/</span> <span class="mi">2</span>
+            <span class="o">+</span> <span class="n">eps_alpha_mu</span>
+            <span class="o">*</span> <span class="n">torch</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">alpha_mu</span><span class="p">,</span> <span class="nb">ord</span><span class="o">=</span><span class="s2">&quot;fro&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">square</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+            <span class="o">/</span> <span class="mi">2</span>
+            <span class="o">+</span> <span class="n">eps_alpha_pi</span>
+            <span class="o">*</span> <span class="n">torch</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">alpha_pi</span><span class="p">,</span> <span class="nb">ord</span><span class="o">=</span><span class="s2">&quot;fro&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">square</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+            <span class="o">/</span> <span class="mi">2</span>
+            <span class="o">+</span> <span class="n">eps_theta</span> <span class="o">*</span> <span class="n">torch</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">log_theta</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="o">-</span><span class="n">loss</span><span class="p">,</span> <span class="n">pen</span></div>
+
+
+<div class="viewcode-block" id="train_ZINB"><a class="viewcode-back" href="../../_autosummary/grad.ZINB_grad.train_ZINB.html#grad.ZINB_grad.train_ZINB">[docs]</a><span class="k">def</span> <span class="nf">train_ZINB</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Trains a ZINB-Grad model</span>
+
+<span class="sd">    The function will train a ZINB-Grad model using an optimizer for a number of epochs,</span>
+<span class="sd">     and it will return both losses and negative log-likelihood, which were obtained</span>
+<span class="sd">     during the training procedure.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x : torch.Tensor</span>
+<span class="sd">        It is the data for training, a Tensor of shape (n_samples, n_features).</span>
+<span class="sd">    optimizer: An object of torch.optim.Optimizer</span>
+<span class="sd">        For more details, please refer to Pytorch documentation.</span>
+<span class="sd">    model: An object of the ZINB_Grad class</span>
+<span class="sd">        Please refer to the example.</span>
+<span class="sd">    epochs : int (optional, default=150)</span>
+<span class="sd">        Number of iteration for training.</span>
+<span class="sd">    val : bool (optional, default=False)</span>
+<span class="sd">        Whether it is validation or training process.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    losses : list</span>
+<span class="sd">         A list consisting of the loss of each epoch.</span>
+<span class="sd">    neg_log_liks : list</span>
+<span class="sd">         A list consisting of the negative Log-likelihood of each epoch.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import ZINB_grad</span>
+<span class="sd">    &gt;&gt;&gt; import data_prep</span>
+<span class="sd">    &gt;&gt;&gt; import torch</span>
+<span class="sd">    &gt;&gt;&gt; from torch.utils.data import DataLoader</span>
+<span class="sd">    &gt;&gt;&gt; cortex = data_prep.CORTEX()</span>
+<span class="sd">    &gt;&gt;&gt; y, labels = next(iter(DataLoader(cortex,</span>
+<span class="sd">                                 batch_size= cortex.n_cells,</span>
+<span class="sd">                                 shuffle=True)))</span>
+<span class="sd">    &gt;&gt;&gt; model = ZINB_grad.ZINB_WaVE(Y = y, K = 10, device =device)</span>
+<span class="sd">    &gt;&gt;&gt; optimizer = torch.optim.Adam(model.parameters(), lr = 0.08)</span>
+<span class="sd">    &gt;&gt;&gt; losses, neg_log_liks = ZINB_grad.train_ZINB(y, optimizer, model, epochs = 300)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">losses</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">neg_log_liks</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">epochs</span><span class="p">):</span>
+        <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">batch</span> <span class="o">=</span> <span class="n">x</span>
+
+        <span class="n">p</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">batch</span><span class="p">)</span>
+
+        <span class="n">neg_log_lik</span><span class="p">,</span> <span class="n">pen</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">_loss</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+        <span class="n">loss</span> <span class="o">=</span> <span class="n">neg_log_lik</span> <span class="o">+</span> <span class="n">pen</span>
+
+        <span class="n">losses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">loss</span><span class="o">.</span><span class="n">item</span><span class="p">())</span>
+        <span class="n">neg_log_liks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">neg_log_lik</span><span class="o">.</span><span class="n">item</span><span class="p">())</span>
+
+        <span class="k">if</span> <span class="n">i</span> <span class="o">%</span> <span class="mi">50</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">val</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;epoch: </span><span class="si">{</span><span class="n">i</span><span class="si">:</span><span class="s2">3</span><span class="si">}</span><span class="s2">  loss: </span><span class="si">{</span><span class="n">loss</span><span class="o">.</span><span class="n">item</span><span class="p">()</span><span class="si">:</span><span class="s2">10.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="n">optimizer</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
+        <span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
+        <span class="n">optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">val</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;validation loss: </span><span class="si">{</span><span class="n">loss</span><span class="o">.</span><span class="n">item</span><span class="p">()</span><span class="si">:</span><span class="s2">10.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;epoch: </span><span class="si">{</span><span class="n">i</span><span class="si">:</span><span class="s2">3</span><span class="si">}</span><span class="s2">  loss: </span><span class="si">{</span><span class="n">loss</span><span class="o">.</span><span class="n">item</span><span class="p">()</span><span class="si">:</span><span class="s2">10.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>  <span class="c1"># print the last line</span>
+
+    <span class="k">return</span> <span class="n">losses</span><span class="p">,</span> <span class="n">neg_log_liks</span></div>
+
+
+<div class="viewcode-block" id="train_ZINB_with_val"><a class="viewcode-back" href="../../_autosummary/grad.ZINB_grad.train_ZINB_with_val.html#grad.ZINB_grad.train_ZINB_with_val">[docs]</a><span class="k">def</span> <span class="nf">train_ZINB_with_val</span><span class="p">(</span>
+    <span class="n">x</span><span class="p">,</span>
+    <span class="n">val_data</span><span class="p">,</span>
+    <span class="n">optimizer</span><span class="p">,</span>
+    <span class="n">model</span><span class="p">,</span>
+    <span class="n">device</span><span class="p">,</span>
+    <span class="n">X_val</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">epochs</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span>
+    <span class="n">PATH</span><span class="o">=</span><span class="s2">&quot;/home/longlab/Data/Thesis/Data/&quot;</span><span class="p">,</span>
+    <span class="n">early_stop</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Trains a ZINB-Grad model with validation</span>
+
+<span class="sd">    The function will train a ZINB-Grad model with validation using an optimizer for a</span>
+<span class="sd">    number of epochs, and it will return losses, negative log-likelihood, and validation</span>
+<span class="sd">     losses which were obtained during the training procedure.</span>
+<span class="sd">    The function will save the model with the best validation loss, and it uses early</span>
+<span class="sd">    stopping to avoid overfitting. In the early stopping the model with the best</span>
+<span class="sd">    validation loss will be loaded.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x : `torch.Tensor`</span>
+<span class="sd">        It is the data for training, a Tensor of shape (n_samples, n_features).</span>
+<span class="sd">    val_data : `torch.Tensor`</span>
+<span class="sd">        It is the validation data, a Tensor of shape (n_samples_val, n_features).</span>
+<span class="sd">    optimizer: An object of `torch.optim.Optimizer`</span>
+<span class="sd">        For more details, please refer to Pytorch documentation.</span>
+<span class="sd">    model: An object of the `ZINB_Grad` class</span>
+<span class="sd">        Please refer to the example.</span>
+<span class="sd">    device : A `torch.device` object</span>
+<span class="sd">        Please refer to Pytorch documentation for more details.</span>
+<span class="sd">    X_val : `torch.Tensor` (optional, default=None)</span>
+<span class="sd">        It is the X parameter of the ZINB-Grad model for the validation samples, a</span>
+<span class="sd">        Tensor of shape (n_samples_val, M).</span>
+<span class="sd">    epochs : int (optional, default=150)</span>
+<span class="sd">        Number of iteration for training.</span>
+<span class="sd">    early_stop : bool (optional, default=False)</span>
+<span class="sd">        If True the function will use early stopping.</span>
+<span class="sd">    PATH : str</span>
+<span class="sd">        The path to save the best model.</span>
+
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    losses : list</span>
+<span class="sd">         A list consisting of the loss of each epoch.</span>
+<span class="sd">    neg_log_liks : list</span>
+<span class="sd">         A list consisting of the negative Log-likelihood of each epoch.</span>
+<span class="sd">    val_losses : list</span>
+<span class="sd">         A list consisting of the validation losses of each validation step.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">losses</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">neg_log_liks</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">val_losses</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">val_loss</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">val_ZINB</span><span class="p">(</span><span class="n">val_data</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">X_val</span><span class="o">=</span><span class="n">X_val</span><span class="p">)</span>
+    <span class="n">val_losses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">val_loss</span><span class="p">)</span>
+
+    <span class="c1"># to avoid error when training is not making the model any better</span>
+    <span class="n">torch</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">state_dict</span><span class="p">(),</span> <span class="n">PATH</span> <span class="o">+</span> <span class="s2">&quot;best_trained_model.pt&quot;</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">epochs</span><span class="p">):</span>
+        <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">batch</span> <span class="o">=</span> <span class="n">x</span>
+
+        <span class="n">p</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">batch</span><span class="p">)</span>
+
+        <span class="n">neg_log_lik</span><span class="p">,</span> <span class="n">pen</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">_loss</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+        <span class="n">loss</span> <span class="o">=</span> <span class="n">neg_log_lik</span> <span class="o">+</span> <span class="n">pen</span>
+
+        <span class="n">losses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">loss</span><span class="o">.</span><span class="n">item</span><span class="p">())</span>
+        <span class="n">neg_log_liks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">neg_log_lik</span><span class="o">.</span><span class="n">item</span><span class="p">())</span>
+        <span class="n">optimizer</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
+        <span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
+        <span class="n">optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">i</span> <span class="o">%</span> <span class="mi">50</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;epoch: </span><span class="si">{</span><span class="n">i</span><span class="si">:</span><span class="s2">3</span><span class="si">}</span><span class="s2">  loss: </span><span class="si">{</span><span class="n">loss</span><span class="o">.</span><span class="n">item</span><span class="p">()</span><span class="si">:</span><span class="s2">10.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+            <span class="n">val_loss_last</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">val_ZINB</span><span class="p">(</span><span class="n">val_data</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">X_val</span><span class="o">=</span><span class="n">X_val</span><span class="p">)</span>
+            <span class="n">val_losses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">val_loss</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">val_loss_last</span> <span class="o">&lt;=</span> <span class="n">val_loss</span><span class="p">:</span>
+                <span class="n">val_loss</span> <span class="o">=</span> <span class="n">val_loss_last</span>
+
+                <span class="c1"># save model checkpoint</span>
+                <span class="n">torch</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">state_dict</span><span class="p">(),</span> <span class="n">PATH</span> <span class="o">+</span> <span class="s2">&quot;best_trained_model.pt&quot;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">early_stop</span><span class="p">:</span>
+                <span class="n">model</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">PATH</span> <span class="o">+</span> <span class="s2">&quot;best_trained_model.pt&quot;</span><span class="p">))</span>
+                <span class="k">break</span>
+
+    <span class="n">val_loss_last</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">val_ZINB</span><span class="p">(</span><span class="n">val_data</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">X_val</span><span class="o">=</span><span class="n">X_val</span><span class="p">)</span>
+    <span class="n">val_losses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">val_loss</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">val_loss_last</span> <span class="o">&lt;=</span> <span class="n">val_loss</span><span class="p">:</span>
+        <span class="n">val_loss</span> <span class="o">=</span> <span class="n">val_loss_last</span>
+
+        <span class="c1"># save model checkpoint</span>
+        <span class="n">torch</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">state_dict</span><span class="p">(),</span> <span class="n">PATH</span> <span class="o">+</span> <span class="s2">&quot;best_trained_model.pt&quot;</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;epoch: </span><span class="si">{</span><span class="n">i</span><span class="si">:</span><span class="s2">3</span><span class="si">}</span><span class="s2">  loss: </span><span class="si">{</span><span class="n">loss</span><span class="o">.</span><span class="n">item</span><span class="p">()</span><span class="si">:</span><span class="s2">10.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>  <span class="c1"># print the last line</span>
+
+    <span class="k">return</span> <span class="n">losses</span><span class="p">,</span> <span class="n">neg_log_liks</span><span class="p">,</span> <span class="n">val_losses</span></div>
+
+
+<div class="viewcode-block" id="val_ZINB"><a class="viewcode-back" href="../../_autosummary/grad.ZINB_grad.val_ZINB.html#grad.ZINB_grad.val_ZINB">[docs]</a><span class="k">def</span> <span class="nf">val_ZINB</span><span class="p">(</span><span class="n">val_data</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span> <span class="n">X_val</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns the validation loss and negative log-likelihood</span>
+
+<span class="sd">    The function will perform the validation on a ZINB-Grad model.</span>
+<span class="sd">    The following parameters would be the same during the validation process:</span>
+<span class="sd">        `log_theta`, `beta_mu, `beta_pi`, `alpha_mu`, and `alpha_pi`, and they will</span>
+<span class="sd">    not be updated.</span>
+
+<span class="sd">    However, the `W`, `gamma_mu`, and `gamma_pi` would change because their</span>
+<span class="sd">    dimension depend on the number of samples, i.e., are sample specific.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    val_data : `torch.Tensor`</span>
+<span class="sd">        It is the validation data, a Tensor of shape (n_samples_val, n_features).</span>
+<span class="sd">    model: An object of the `ZINB_Grad` class</span>
+<span class="sd">        Please refer to the example.</span>
+<span class="sd">    device : A `torch.device` object</span>
+<span class="sd">        Please refer to Pytorch documentation for more details.</span>
+<span class="sd">    epochs : int (optional, default=15)</span>
+<span class="sd">        Number of iteration for training.</span>
+<span class="sd">    X_val : `torch.Tensor` (optional, default=None)</span>
+<span class="sd">        It is the X parameter of the ZINB-Grad model for the validation samples, a</span>
+<span class="sd">        Tensor of shape (n_samples_val, M).</span>
+
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    loss : float</span>
+<span class="sd">         The validation loss</span>
+<span class="sd">    neg_log_lik : float</span>
+<span class="sd">         The validation negative log-likelihood</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">model_val</span> <span class="o">=</span> <span class="n">ZINB_Grad</span><span class="p">(</span>
+        <span class="n">Y</span><span class="o">=</span><span class="n">val_data</span><span class="p">,</span>
+        <span class="n">X</span><span class="o">=</span><span class="n">X_val</span><span class="p">,</span>
+        <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span>
+        <span class="n">K</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">K</span><span class="p">,</span>
+        <span class="n">alpha_mu</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">alpha_mu</span><span class="o">.</span><span class="n">detach</span><span class="p">(),</span>
+        <span class="n">alpha_pi</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">alpha_pi</span><span class="o">.</span><span class="n">detach</span><span class="p">(),</span>
+        <span class="n">beta_mu</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">beta_mu</span><span class="o">.</span><span class="n">detach</span><span class="p">(),</span>
+        <span class="n">beta_pi</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">beta_pi</span><span class="o">.</span><span class="n">detach</span><span class="p">(),</span>
+        <span class="n">log_theta</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">log_theta</span><span class="o">.</span><span class="n">detach</span><span class="p">(),</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Tuning the validation model parameters (W and gammas)</span>
+    <span class="n">model_val</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+    <span class="n">optimizer</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Adam</span><span class="p">(</span><span class="n">model_val</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+    <span class="n">losses</span><span class="p">,</span> <span class="n">neg_log_liks</span> <span class="o">=</span> <span class="n">train_ZINB</span><span class="p">(</span>
+        <span class="n">val_data</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">,</span> <span class="n">model_val</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="n">epochs</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="kc">True</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">losses</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">neg_log_liks</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Hamid Hamidi.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

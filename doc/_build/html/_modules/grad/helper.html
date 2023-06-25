@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>grad.helper &mdash; Grad-Learn 0.1.0 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Grad-Learn
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_autosummary/grad.html">grad</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Grad-Learn</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">grad.helper</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for grad.helper</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This contains all helper functions for experiments and visualizations.</span>
+<span class="sd">@author: HH197</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">scipy.sparse</span>
+<span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
+
+<span class="c1"># import seaborn as sn</span>
+<span class="kn">from</span> <span class="nn">sklearn</span> <span class="kn">import</span> <span class="n">metrics</span>
+<span class="kn">from</span> <span class="nn">sklearn.cluster</span> <span class="kn">import</span> <span class="n">AgglomerativeClustering</span><span class="p">,</span> <span class="n">KMeans</span>
+<span class="kn">from</span> <span class="nn">sklearn.manifold</span> <span class="kn">import</span> <span class="n">TSNE</span>
+
+<span class="c1"># from pandas import DataFrame</span>
+<span class="kn">from</span> <span class="nn">sklearn.neighbors</span> <span class="kn">import</span> <span class="n">NearestNeighbors</span>
+
+
+<div class="viewcode-block" id="kmeans"><a class="viewcode-back" href="../../_autosummary/grad.helper.kmeans.html#grad.helper.kmeans">[docs]</a><span class="k">def</span> <span class="nf">kmeans</span><span class="p">(</span>
+    <span class="n">data</span><span class="p">,</span>
+    <span class="n">range_cluster</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span>
+    <span class="n">kmeans_kwargs</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;init&quot;</span><span class="p">:</span> <span class="s2">&quot;random&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;n_init&quot;</span><span class="p">:</span> <span class="mi">50</span><span class="p">,</span>
+        <span class="s2">&quot;max_iter&quot;</span><span class="p">:</span> <span class="mi">400</span><span class="p">,</span>
+        <span class="s2">&quot;random_state&quot;</span><span class="p">:</span> <span class="mi">197</span><span class="p">,</span>
+    <span class="p">},</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Performs K-means on the data</span>
+
+<span class="sd">    The function perfoms K-means on the data (usually latent space of a model) for</span>
+<span class="sd">    various number of clusters and returns a list containing average Silhouette width.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    kmeans_kwargs : dict</span>
+<span class="sd">        For more details, please refer to scikit-learn documentation.</span>
+<span class="sd">    range_cluster : tuple</span>
+<span class="sd">        The range of the number of clusters.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">sil_coeff</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">range_cluster</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">range_cluster</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+        <span class="n">kmeans</span> <span class="o">=</span> <span class="n">KMeans</span><span class="p">(</span><span class="n">n_clusters</span><span class="o">=</span><span class="n">k</span><span class="p">,</span> <span class="o">**</span><span class="n">kmeans_kwargs</span><span class="p">)</span>
+        <span class="n">kmeans</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="c1"># score = kmeans.inertia_</span>
+        <span class="n">score</span> <span class="o">=</span> <span class="n">metrics</span><span class="o">.</span><span class="n">silhouette_score</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">kmeans</span><span class="o">.</span><span class="n">labels_</span><span class="p">)</span>
+        <span class="n">sil_coeff</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">score</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">sil_coeff</span></div>
+
+
+<div class="viewcode-block" id="plot_line"><a class="viewcode-back" href="../../_autosummary/grad.helper.plot_line.html#grad.helper.plot_line">[docs]</a><span class="k">def</span> <span class="nf">plot_line</span><span class="p">(</span>
+    <span class="n">x</span><span class="p">,</span>
+    <span class="n">y</span><span class="p">,</span>
+    <span class="n">line_style</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">axis_x_ticks</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">color</span><span class="o">=</span><span class="s2">&quot;blue&quot;</span><span class="p">,</span>
+    <span class="n">xlab</span><span class="o">=</span><span class="s2">&quot;Number of epochs&quot;</span><span class="p">,</span>
+    <span class="n">ylab</span><span class="o">=</span><span class="s2">&quot;Neg-Loglikelihood&quot;</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A simple function to graph the plot lines with customized options.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    y : list</span>
+<span class="sd">        The y coordinate of the points.</span>
+<span class="sd">    x : list</span>
+<span class="sd">        The x coordinate of the points.</span>
+<span class="sd">    xlab : str</span>
+<span class="sd">        The x axis label.</span>
+<span class="sd">    ylab : str</span>
+<span class="sd">        The y axis label.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">line_style</span><span class="p">:</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">line_style</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">axis_x_ticks</span><span class="p">:</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">(</span><span class="n">axis_x_ticks</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xticklabels</span><span class="p">(</span><span class="n">axis_x_ticks</span><span class="p">)</span>
+
+    <span class="n">ax</span><span class="o">.</span><span class="n">spines</span><span class="p">[</span><span class="s2">&quot;top&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">set_color</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">spines</span><span class="p">[</span><span class="s2">&quot;right&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">set_color</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">spines</span><span class="p">[</span><span class="s2">&quot;bottom&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">set_color</span><span class="p">(</span><span class="s2">&quot;black&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">spines</span><span class="p">[</span><span class="s2">&quot;left&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">set_color</span><span class="p">(</span><span class="s2">&quot;black&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="n">ylab</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="n">xlab</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_facecolor</span><span class="p">(</span><span class="s2">&quot;white&quot;</span><span class="p">)</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">set_facecolor</span><span class="p">(</span><span class="s2">&quot;white&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="measure_q"><a class="viewcode-back" href="../../_autosummary/grad.helper.measure_q.html#grad.helper.measure_q">[docs]</a><span class="k">def</span> <span class="nf">measure_q</span><span class="p">(</span>
+    <span class="n">data</span><span class="p">,</span>
+    <span class="n">Groups</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">n_clusters</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
+    <span class="n">kmeans_kwargs</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;init&quot;</span><span class="p">:</span> <span class="s2">&quot;random&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;n_init&quot;</span><span class="p">:</span> <span class="mi">50</span><span class="p">,</span>
+        <span class="s2">&quot;max_iter&quot;</span><span class="p">:</span> <span class="mi">400</span><span class="p">,</span>
+        <span class="s2">&quot;random_state&quot;</span><span class="p">:</span> <span class="mi">197</span><span class="p">,</span>
+    <span class="p">},</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function will measure the quality of clustering using NMI, ARI, and ASW.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data : an array</span>
+<span class="sd">        The latent space of the model.</span>
+
+<span class="sd">    Groups : an array</span>
+<span class="sd">        The real lables.</span>
+
+<span class="sd">    n_clusters : int</span>
+<span class="sd">        The number of clusters in K-means.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">Groups</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">Groups</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span>
+
+    <span class="n">kmeans</span> <span class="o">=</span> <span class="n">KMeans</span><span class="p">(</span><span class="n">n_clusters</span><span class="p">,</span> <span class="o">**</span><span class="n">kmeans_kwargs</span><span class="p">)</span>
+    <span class="n">kmeans</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+    <span class="n">NMI</span> <span class="o">=</span> <span class="n">metrics</span><span class="o">.</span><span class="n">cluster</span><span class="o">.</span><span class="n">normalized_mutual_info_score</span><span class="p">(</span><span class="n">Groups</span><span class="p">,</span> <span class="n">kmeans</span><span class="o">.</span><span class="n">labels_</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The NMI score is: </span><span class="si">{</span><span class="n">NMI</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="n">ARI</span> <span class="o">=</span> <span class="n">metrics</span><span class="o">.</span><span class="n">adjusted_rand_score</span><span class="p">(</span><span class="n">Groups</span><span class="p">,</span> <span class="n">kmeans</span><span class="o">.</span><span class="n">labels_</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The ARI score is: </span><span class="si">{</span><span class="n">ARI</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="n">ASW</span> <span class="o">=</span> <span class="n">metrics</span><span class="o">.</span><span class="n">silhouette_score</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">kmeans</span><span class="o">.</span><span class="n">labels_</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The ASW score is: </span><span class="si">{</span><span class="n">ASW</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+    <span class="c1"># CM = metrics.confusion_matrix(Groups, kmeans.labels_)</span>
+
+    <span class="c1"># df_cm = DataFrame(CM, range(1, CM.shape[0]+1), range(1, CM.shape[1]+1))</span>
+    <span class="c1"># # plt.figure(figsize=(10,7))</span>
+    <span class="c1"># sn.set(font_scale=1.4) # for label size</span>
+    <span class="c1"># sn.heatmap(df_cm, annot=True, annot_kws={&quot;size&quot;: 5}) # font size</span>
+
+    <span class="c1"># plt.show()</span>
+
+
+<div class="viewcode-block" id="corrupting"><a class="viewcode-back" href="../../_autosummary/grad.helper.corrupting.html#grad.helper.corrupting">[docs]</a><span class="k">def</span> <span class="nf">corrupting</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="mf">0.10</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;Uniform&quot;</span><span class="p">,</span> <span class="n">percentage</span><span class="o">=</span><span class="mf">0.10</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Adopted from the &quot;Deep Generative modeling for transcriptomics data&quot;</span>
+
+<span class="sd">    This function will corrupt  (adding noise or dropouts) the datasets for</span>
+<span class="sd">    imputation benchmarking.</span>
+
+<span class="sd">    Two different approaches for data corruption:</span>
+<span class="sd">        1. Uniform zero introduction: Randomly selected a percentage of the nonzero</span>
+<span class="sd">        entries and multiplied the entry n with a Ber(0.9) random variable.</span>
+<span class="sd">        2. Binomial data corruption: Randomly selected a percentage of the matrix and</span>
+<span class="sd">        replaced an entry n with a Bin(n, 0.2) random variable.</span>
+
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data : numpy ndarray</span>
+<span class="sd">        The data.</span>
+
+<span class="sd">    p : float &gt;= 0 and &lt;=1</span>
+<span class="sd">        The probability of success in Bernoulli or Binomial distribution.</span>
+
+<span class="sd">    method: str</span>
+<span class="sd">        Specifies the method of data corruption, one of the two options: &quot;Uniform&quot; and</span>
+<span class="sd">        &quot;Binomial&quot;</span>
+
+<span class="sd">    percentage: float &gt;0 and &lt;1.</span>
+<span class="sd">        The percentage of non-zero elements to be selected for corruption.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    data_c : numpy ndarray</span>
+<span class="sd">        The corrupted data.</span>
+
+<span class="sd">    x, y, ind : int</span>
+<span class="sd">        The indices of where corruption is applied.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">data_c</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+    <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="n">ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="mf">0.1</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)),</span> <span class="n">replace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;Uniform&quot;</span><span class="p">:</span>
+        <span class="n">data_c</span><span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="n">ind</span><span class="p">],</span> <span class="n">y</span><span class="p">[</span><span class="n">ind</span><span class="p">]]</span> <span class="o">*=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">binomial</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;Binomial&quot;</span><span class="p">:</span>
+        <span class="n">data_c</span><span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="n">ind</span><span class="p">],</span> <span class="n">y</span><span class="p">[</span><span class="n">ind</span><span class="p">]]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">binomial</span><span class="p">(</span>
+            <span class="n">data_c</span><span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="n">ind</span><span class="p">],</span> <span class="n">y</span><span class="p">[</span><span class="n">ind</span><span class="p">]]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">),</span> <span class="n">p</span>
+        <span class="p">)</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;Method can be one of &quot;Uniform&quot; or &quot;Binomial&quot;&#39;&#39;&#39;</span><span class="p">)</span>
+    <span class="c1"># to be developed</span>
+
+    <span class="k">return</span> <span class="n">data_c</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">ind</span></div>
+
+
+<div class="viewcode-block" id="Eval_Imputation"><a class="viewcode-back" href="../../_autosummary/grad.helper.Eval_Imputation.html#grad.helper.Eval_Imputation">[docs]</a><span class="k">def</span> <span class="nf">Eval_Imputation</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">data_imp</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">ind</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates the median L1 distance between the original dataset and the</span>
+<span class="sd">    imputed values for corrupted entries only.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data : numpy ndarray</span>
+<span class="sd">        The data.</span>
+
+<span class="sd">    data_imp : numpy ndarray</span>
+<span class="sd">        The imputed data.</span>
+
+<span class="sd">    x, y, ind : int</span>
+<span class="sd">        The indices of where corruption is applied.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    L1 : float</span>
+<span class="sd">        The median L1 distance between original and imputed datasets at given</span>
+<span class="sd">    indices.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">L1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="n">ind</span><span class="p">],</span> <span class="n">y</span><span class="p">[</span><span class="n">ind</span><span class="p">]]</span> <span class="o">-</span> <span class="n">data_imp</span><span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="n">ind</span><span class="p">],</span> <span class="n">y</span><span class="p">[</span><span class="n">ind</span><span class="p">]]))</span>
+
+    <span class="k">return</span> <span class="n">L1</span></div>
+
+
+<div class="viewcode-block" id="entropy"><a class="viewcode-back" href="../../_autosummary/grad.helper.entropy.html#grad.helper.entropy">[docs]</a><span class="k">def</span> <span class="nf">entropy</span><span class="p">(</span><span class="n">batches</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates the entropy.</span>
+
+<span class="sd">    Entropy of mixing for c different batches is defined as:</span>
+
+<span class="sd">        $$E = - \\sum_{i=1}^c x_i \\log x_i$$</span>
+
+<span class="sd">    where $x_i$ is the proportion of cells from batch i in a given region, such</span>
+<span class="sd">    that $\\sum_{i=1}^c x_i = 1$.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    batches : numpy array or list</span>
+<span class="sd">        The batches in the region.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    entropy : float</span>
+<span class="sd">        Entropy of mixing.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">n_batches</span><span class="p">,</span> <span class="n">frq</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">batches</span><span class="p">,</span> <span class="n">return_counts</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">n_batches</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">n_batches</span><span class="p">)</span>
+    <span class="n">frq</span> <span class="o">=</span> <span class="n">frq</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">frq</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">frq</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">frq</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="entropy_batch_mixing"><a class="viewcode-back" href="../../_autosummary/grad.helper.entropy_batch_mixing.html#grad.helper.entropy_batch_mixing">[docs]</a><span class="k">def</span> <span class="nf">entropy_batch_mixing</span><span class="p">(</span><span class="n">latent_space</span><span class="p">,</span> <span class="n">batches</span><span class="p">,</span> <span class="n">K</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">n_iter</span><span class="o">=</span><span class="mi">50</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Adopted from:</span>
+
+<span class="sd">    1) Haghverdi L, Lun ATL, Morgan MD, Marioni JC. Batch effects in</span>
+<span class="sd">    single-cell RNA-sequencing data are corrected by matching mutual nearest</span>
+<span class="sd">    neighbors. Nat Biotechnol. 2018 Jun;36(5):421-427. doi: 10.1038/nbt.4091.</span>
+
+<span class="sd">    2) Lopez R, Regier J, Cole MB, Jordan MI, Yosef N. Deep generative</span>
+<span class="sd">    modeling for single-cell transcriptomics. Nat Methods.</span>
+<span class="sd">    2018 Dec;15(12):1053-1058. doi: 10.1038/s41592-018-0229-2.</span>
+
+<span class="sd">    This function will choose `n` cells from batches, finds `K` nearest neighbors</span>
+<span class="sd">    of each randomly chosen cell, and calculates the average regional entropy</span>
+<span class="sd">    of all `n` cells.</span>
+
+<span class="sd">    The procedure is repeated for `n_iter` iterations. Finally, the average of the</span>
+<span class="sd">    iterations is returned as the final batch mixing score.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    latent_space : numpy ndarray</span>
+<span class="sd">        The latent space matrix.</span>
+
+<span class="sd">    batches : a numpy array or a list</span>
+<span class="sd">        The batch number of each sample in the latent space matrix.</span>
+
+<span class="sd">    K : int</span>
+<span class="sd">        Number of nearest neighbors.</span>
+
+<span class="sd">    n_jobs : int</span>
+<span class="sd">        Number of jobs. Please visit scikit-learn documentation for more info.</span>
+
+<span class="sd">    n : int</span>
+<span class="sd">        Number of cells to be chosen randomly.</span>
+
+<span class="sd">    n_iter : int</span>
+<span class="sd">        Number of iterations to randomly choosing n cells.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    score : float &lt;= 1</span>
+<span class="sd">        The batch mixing score; the higher, the better.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">n_samples</span> <span class="o">=</span> <span class="n">latent_space</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">nne</span> <span class="o">=</span> <span class="n">NearestNeighbors</span><span class="p">(</span><span class="n">n_neighbors</span><span class="o">=</span><span class="n">K</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="n">n_jobs</span><span class="p">)</span>
+    <span class="n">nne</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">latent_space</span><span class="p">)</span>
+    <span class="n">kmatrix</span> <span class="o">=</span> <span class="n">nne</span><span class="o">.</span><span class="n">kneighbors_graph</span><span class="p">(</span><span class="n">latent_space</span><span class="p">)</span> <span class="o">-</span> <span class="n">scipy</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">n_samples</span><span class="p">)</span>
+
+    <span class="n">score</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_iter</span><span class="p">):</span>
+        <span class="n">ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">n_samples</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">n</span><span class="p">)</span>
+        <span class="n">inds</span> <span class="o">=</span> <span class="n">kmatrix</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span><span class="o">.</span><span class="n">nonzero</span><span class="p">()[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+        <span class="n">score</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">([</span><span class="n">entropy</span><span class="p">(</span><span class="n">batches</span><span class="p">[</span><span class="n">inds</span><span class="p">[</span><span class="n">i</span><span class="p">]])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">)])</span>
+
+    <span class="n">score</span> <span class="o">=</span> <span class="n">score</span> <span class="o">/</span> <span class="n">n_iter</span>
+
+    <span class="k">return</span> <span class="n">score</span></div>
+
+
+<div class="viewcode-block" id="plot_tSNE"><a class="viewcode-back" href="../../_autosummary/grad.helper.plot_tSNE.html#grad.helper.plot_tSNE">[docs]</a><span class="k">def</span> <span class="nf">plot_tSNE</span><span class="p">(</span><span class="n">latent</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">plt</span><span class="o">.</span><span class="n">get_cmap</span><span class="p">(</span><span class="s2">&quot;tab10&quot;</span><span class="p">,</span> <span class="mi">7</span><span class="p">),</span> <span class="n">perform_tsne</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Adoptd from:</span>
+
+<span class="sd">    Lopez R, Regier J, Cole MB, Jordan MI, Yosef N. Deep generative</span>
+<span class="sd">    modeling for single-cell transcriptomics. Nat Methods.</span>
+<span class="sd">    2018 Dec;15(12):1053-1058. doi: 10.1038/s41592-018-0229-2.</span>
+
+<span class="sd">    Given a `latent` space and class labels, the function will calculate the</span>
+<span class="sd">    tSNE of the latent space and make a graph of the tSNE latent space using</span>
+<span class="sd">    the classes.</span>
+
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    latent_space : numpy ndarray</span>
+<span class="sd">        The latent space matrix.</span>
+
+<span class="sd">    labels : a numpy array or a list</span>
+<span class="sd">        The batch (or cluster) number of each sample in the latent space matrix.</span>
+
+<span class="sd">    cmap : pylot instance</span>
+<span class="sd">        a colormap instance (see Matplotlib doc for more info).</span>
+
+<span class="sd">    perform_tsne : Boolean</span>
+<span class="sd">        If `True` the function will perform the tSNE. Otherwise, tSNE will not</span>
+<span class="sd">        be performed on the latent space.</span>
+
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    latent : numpy ndarray</span>
+<span class="sd">        The latent space of the tSNE.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">perform_tsne</span><span class="p">:</span>
+        <span class="n">latent</span> <span class="o">=</span> <span class="n">TSNE</span><span class="p">()</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">latent</span><span class="p">)</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">latent</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">latent</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">c</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">,</span> <span class="n">edgecolors</span><span class="o">=</span><span class="s2">&quot;none&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s2">&quot;off&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">latent</span></div>
+
+
+<div class="viewcode-block" id="HC"><a class="viewcode-back" href="../../_autosummary/grad.helper.HC.html#grad.helper.HC">[docs]</a><span class="k">def</span> <span class="nf">HC</span><span class="p">(</span><span class="n">latent</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">num_clusters</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">7</span><span class="p">]):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Given a `latent` space for the CORTEX data set and labels,</span>
+<span class="sd">    the function will perform hierarchical clustering (HC) on the latent space</span>
+<span class="sd">    and calculate the NMI score.</span>
+
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    latent_space : numpy ndarray</span>
+<span class="sd">        The latent space matrix.</span>
+
+<span class="sd">    labels : a numpy array or a list</span>
+<span class="sd">        The batch (or cluster) number of each sample in the latent space matrix.</span>
+
+<span class="sd">    num_clusters : list</span>
+<span class="sd">        A list of the number of cluusters to perform the HC.</span>
+
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    nmis : list</span>
+<span class="sd">        The NMI score of each number of clusters.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">nmis</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">num_clusters</span><span class="p">:</span>
+        <span class="n">new_labels</span> <span class="o">=</span> <span class="n">labels</span> <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">7</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">labels</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+                <span class="n">new_labels</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">labels</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">5</span><span class="p">]</span> <span class="k">else</span> <span class="mi">0</span>
+
+        <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">labels</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+                <span class="k">if</span> <span class="n">labels</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">5</span><span class="p">]:</span>
+                    <span class="n">new_labels</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span>
+                <span class="k">elif</span> <span class="n">labels</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">]:</span>
+                    <span class="n">new_labels</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">new_labels</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">labels</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+                <span class="k">if</span> <span class="n">labels</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">5</span><span class="p">]:</span>
+                    <span class="n">new_labels</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="mi">3</span>
+                <span class="k">elif</span> <span class="n">labels</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">]:</span>
+                    <span class="n">new_labels</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span>
+                <span class="k">elif</span> <span class="n">labels</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+                    <span class="n">new_labels</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">new_labels</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="n">hc</span> <span class="o">=</span> <span class="n">AgglomerativeClustering</span><span class="p">(</span><span class="n">n_clusters</span><span class="o">=</span><span class="n">i</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">latent</span><span class="p">)</span>
+        <span class="n">nmi</span> <span class="o">=</span> <span class="n">metrics</span><span class="o">.</span><span class="n">cluster</span><span class="o">.</span><span class="n">normalized_mutual_info_score</span><span class="p">(</span><span class="n">new_labels</span><span class="p">,</span> <span class="n">hc</span><span class="o">.</span><span class="n">labels_</span><span class="p">)</span>
+        <span class="n">nmis</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">nmi</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">nmis</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Hamid Hamidi.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -20,12 +20,16 @@ release = "0.1.0"
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = [
+    "sphinx.ext.intersphinx",
     "sphinx.ext.autodoc",
     "sphinx.ext.viewcode",
     "sphinx.ext.autosummary",
     "sphinx_rtd_theme",
+    "sphinx.ext.doctest",
 ]
+
 autosummary_generate = True
+autodoc_inherit_docstrings = False
 
 templates_path = ["_templates"]
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
@@ -37,3 +41,10 @@ html_theme = "sphinx_rtd_theme"
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
 html_static_path = ["_static"]
+
+
+intersphinx_mapping = {
+    "python": ("https://docs.python.org/3/", None),
+    "torch": ("https://pytorch.org/docs/master/", None),
+    "scipy": ("https://docs.scipy.org/doc/scipy/reference/", None),
+}

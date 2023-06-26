@@ -1,7 +1,6 @@
 """
 the ZINB-Grad, a gradient-based ZINB GLMM with GPU acceleration,
 high-performance scalability, and memory-efficient estimation.
-@author: HH197
 """
 import torch
 from pyro.distributions import ZeroInflatedNegativeBinomial as ZINB

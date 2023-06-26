@@ -1,6 +1,5 @@
 """
 This contains all helper functions for experiments and visualizations.
-@author: HH197
 """
 
 import numpy as np

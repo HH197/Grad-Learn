@@ -1,6 +1,5 @@
 """
 Loading single-cell RNA-seq datasets with necessary pre-processing steps.
-@author: HH197
 """
 
 import h5py

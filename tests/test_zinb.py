@@ -1,23 +1,12 @@
 """
-A Test for testing the packages in production.
-Author: HH197
+An initial test for testing the packages in production.
 """
-
-import sys
-
-sys.path.append("/home/hh197/Data/Projects/ZINB-Grad/src/")
 
 import grad.ZINB_grad as ZINB_grad
 import torch
-import numpy as np
 import grad.data_prep as data_prep
 import grad.helper as helper
-from importlib import reload
-from torch.utils.data import DataLoader, random_split
-from matplotlib import pyplot as plt
-from torch.nn.functional import one_hot
-import pandas as pd
-
+from torch.utils.data import DataLoader
 
 torch.manual_seed(197)
 device = device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

@@ -1,4 +1,4 @@
-# Most of the file is adopted from Scikit-Learn
+# Most of the file is adopted from Scikit-Learn and scvi-tools
 
 [build-system]
 build-backend = "hatchling.build"
@@ -6,11 +6,11 @@ requires = ["hatchling"]
 
 
 [project]
-name = "grad"
+name = "Grad-Learn"
 version = "0.1.0"
 description = "Optimizing traditional machine learning models with gradient descent and GPUs."
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 
 authors = [
     {name = "Hamid Hamidi"},
@@ -24,8 +24,8 @@ urls.Home-page = "https://github.com/HH197/ZINB-Grad"
 classifiers = [
   "Intended Audience :: Science/Research",
   "Natural Language :: English",
-  "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
   "Operating System :: POSIX :: Linux",
   "Topic :: Scientific/Engineering :: Bio-Informatics",
 ]
@@ -38,7 +38,7 @@ dependencies = [
     "torch>=2.0.1",
     "tqdm>=4.65.0",
     "pyro-ppl>=1.8",
-    "loompy>=3.0.6",
+    "loompy==3.0.6",
     "matplotlib>=3.7"
 ]
 
@@ -47,7 +47,9 @@ dependencies = [
 dev = [
     "black",
     "pytest",
+    "pytest-cov",
     "ruff",
+    "tox"
 ]
 docs = [
     "sphinx>=6.2.1",
@@ -55,24 +57,49 @@ docs = [
 ]
 
 
+[tool.hatch.build.targets.wheel]
+packages = ['grad']
+
+[tool.coverage.run]
+source = ["grad"]
+omit = [
+    "**/test_*.py",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+filterwarnings = [
+    "ignore",
+    "default:::grad",
+] # ignoring deprecation warning from loompy (numba)
+
 [tool.black]
 line-length = 88
 target_version = ['py38', 'py39', 'py310']
 preview = true
 exclude = '''
-/(
-    \.eggs         # exclude a few common directories in the
-  | \.git          # root of the project
-  | \.mypy_cache
-  | doc/_build
-  | experiments
-)/
+(
+  /(
+      \.eggs
+    | \.git
+    | \.hg
+    | \.mypy_cache
+    | \.tox
+    | \.venv
+    | _build
+    | buck-out
+    | build
+    | dist
+  )/
+)
 '''
 
 
 [tool.ruff]
+src = ["."]
 # all rules can be found here: https://beta.ruff.rs/docs/rules/
-select = ["E", "F", "W", "I"]
+select = ["E", "F", "W", "I",]  #"D"]
 
 # max line length for black
 line-length = 88
@@ -94,3 +121,10 @@ exclude=[
     "experiments/*",
 ]
 
+[tool.ruff.pydocstyle]
+convention = "numpy"
+
+
+[tool.ruff.per-file-ignores]
+"docs/*" = ["I", "BLE001"]
+"tests/*" = ["D"]

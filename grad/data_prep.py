@@ -1,22 +1,19 @@
-"""
-Loading single-cell RNA-seq datasets with necessary pre-processing steps.
-"""
+"""Loading single-cell RNA-seq datasets with necessary pre-processing steps."""
 
 import h5py
 import loompy
 import numpy as np
 import pandas as pd
 import torch
+from pyro.distributions import ZeroInflatedNegativeBinomial as ZINB
 from scipy.sparse import csc_matrix, csr_matrix, vstack
 from sklearn.preprocessing import StandardScaler
 from torch.utils.data import Dataset, Sampler
 
 
 class CORTEX(Dataset):
-
     """
     Loads CORTEX dataset.
-
 
     A class with necessary pre-processing steps for the gold standard
     Zeisel data set which contains 3005 mouse cortex cells and gold-standard
@@ -101,10 +98,8 @@ class CORTEX(Dataset):
 
 
 class Brain_Large(Dataset):
-
     """
     Loads BRAIN data set.
-
 
     A class with necessary pre-processing steps for the Large brain dataset.
     The variance of the genes for a sub-sample of 10^5 cells will be calculated
@@ -286,14 +281,12 @@ class Brain_Large(Dataset):
 
 
 class Indice_Sampler(Sampler):
-
     """
     This is a sampler for Pytorch ``DataLoader`` in which it will sample from the
     ``Dataset`` with indices of mask.
 
     Parameters
     ----------
-
     mask: ``torch.tensor``
         The indices of the samples.
 
@@ -325,11 +318,8 @@ class Indice_Sampler(Sampler):
 
 
 class RETINA(Dataset):
-
     """
     Loads RETINA data set.
-
-
 
     A class with necessary pre-processing steps for the RETINA dataset. It seperates
     the raw count data, the cluster numbers, and batches.
@@ -400,3 +390,31 @@ class RETINA(Dataset):
     def __getitem__(self, index):
         matrix_batch = self.data[index]
         return matrix_batch, index
+
+
+class SyntheticData(Dataset):
+    """
+    Generates a synthetic data set for test.
+
+    The resulted data set is not a data set for research purposes.
+
+    To do: Complete the documentation.
+
+    """
+    def __init__(self, device, n_features=50, n_samples=100):
+        self.n_genes = n_features
+        self.n_samples = n_samples
+
+        self.p = torch.rand(n_samples, n_features).to(device)
+        self.log_theta = torch.FloatTensor(1, n_features).uniform_(0, 100).to(device)
+        self.gate_logits = \
+            torch.FloatTensor(n_samples, n_features).uniform_(0, 50).to(device)
+
+        self.dist = ZINB(self.log_theta, gate_logits=self.gate_logits, probs=self.p)
+        self.data = self.dist.sample().to(device)
+
+    def __len__(self):
+        return self.n_samples
+
+    def __getitem__(self, index):
+        return self.data[index]

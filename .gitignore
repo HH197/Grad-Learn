@@ -29,3 +29,30 @@ ENV/
 
 # ruff
 .ruff_cache/
+
+# packaging
+
+env/
+eggs/
+.eggs/
+build/
+*.egg-info/
+.installed.cfg
+*.egg
+pip-wheel-metadata/
+
+
+# Unit test / coverage reports
+
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+

@@ -1,16 +1,16 @@
 """
-the ZINB-Grad, a gradient-based ZINB GLMM with GPU acceleration,
-high-performance scalability, and memory-efficient estimation.
+the ZINB-Grad, a gradient-based ZINB GLMM with GPU acceleration, high-performance
+scalability, and memory-efficient estimation.
 """
+
 import torch
 from pyro.distributions import ZeroInflatedNegativeBinomial as ZINB
 from torch import nn
 
 
 class ZINB_Grad(nn.Module):
-
     """
-    The ZINB-Grad model
+    The ZINB-Grad model.
 
     A gradient descent-based stochastic optimization process for the ZINB-WaVE
     to overcome the scalability and efficiency challenges inherited in its optimization
@@ -177,10 +177,10 @@ class ZINB_Grad(nn.Module):
 
     def forward(self, x):
         """
-         The forward method of class Module in torch.nn
+        The forward method of class Module in `torch.nn`.
 
-         Parameters
-         ----------
+        Parameters
+        ----------
          x : torch.Tensor
              Tensor of shape (n_samples, n_features).
 
@@ -207,13 +207,13 @@ class ZINB_Grad(nn.Module):
 
     def _loss(self, x, p):
         """
-         Returns the loss
+         Returns the loss.
 
          A method to calculate the negative log-likelihood, along with the
          regularization penalty. The regularization is applied to avoid overfitting.
 
-         Parameters
-         ----------
+        Parameters
+        ----------
          x : torch.Tensor
              Tensor of shape (n_samples, n_features).
 
@@ -224,7 +224,6 @@ class ZINB_Grad(nn.Module):
         pen : float
              The regularization term loss.
         """
-
         J = x.shape[1]
         n = x.shape[0]
 
@@ -257,7 +256,7 @@ class ZINB_Grad(nn.Module):
 
 def train_ZINB(x, optimizer, model, epochs=150, val=False):
     """
-    Trains a ZINB-Grad model
+    Trains a ZINB-Grad model.
 
     The function will train a ZINB-Grad model using an optimizer for a number of epochs,
      and it will return both losses and negative log-likelihood, which were obtained
@@ -340,7 +339,7 @@ def train_ZINB_with_val(
     early_stop=False,
 ):
     """
-    Trains a ZINB-Grad model with validation
+    Trains a ZINB-Grad model with validation.
 
     The function will train a ZINB-Grad model with validation using an optimizer for a
     number of epochs, and it will return losses, negative log-likelihood, and validation
@@ -382,7 +381,6 @@ def train_ZINB_with_val(
          A list consisting of the validation losses of each validation step.
 
     """
-
     losses = []
     neg_log_liks = []
     val_losses = []
@@ -439,7 +437,7 @@ def train_ZINB_with_val(
 
 def val_ZINB(val_data, model, device, epochs=15, X_val=None):
     """
-    Returns the validation loss and negative log-likelihood
+    Returns the validation loss and negative log-likelihood.
 
     The function will perform the validation on a ZINB-Grad model.
     The following parameters would be the same during the validation process:
@@ -471,7 +469,6 @@ def val_ZINB(val_data, model, device, epochs=15, X_val=None):
     neg_log_lik : float
          The validation negative log-likelihood
     """
-
     model_val = ZINB_Grad(
         Y=val_data,
         X=X_val,

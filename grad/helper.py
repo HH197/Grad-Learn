@@ -1,7 +1,4 @@
-"""
-This contains all helper functions for experiments and visualizations.
-@author: HH197
-"""
+"""This contains all helper functions for experiments and visualizations."""
 
 import numpy as np
 import scipy.sparse
@@ -27,7 +24,7 @@ def kmeans(
     },
 ):
     """
-    Performs K-means on the data
+    Performs K-means on the data.
 
     The function perfoms K-means on the data (usually latent space of a model) for
     various number of clusters and returns a list containing average Silhouette width.
@@ -40,7 +37,6 @@ def kmeans(
         The range of the number of clusters.
 
     """
-
     sil_coeff = []
 
     for k in range(range_cluster[0], range_cluster[1]):
@@ -76,7 +72,6 @@ def plot_line(
     ylab : str
         The y axis label.
     """
-
     fig, ax = plt.subplots()
 
     if line_style:
@@ -151,7 +146,7 @@ def measure_q(
 
 def corrupting(data, p=0.10, method="Uniform", percentage=0.10):
     """
-    Adopted from the "Deep Generative modeling for transcriptomics data"
+    Adopted from the "Deep Generative modeling for transcriptomics data".
 
     This function will corrupt  (adding noise or dropouts) the datasets for
     imputation benchmarking.
@@ -186,7 +181,6 @@ def corrupting(data, p=0.10, method="Uniform", percentage=0.10):
     x, y, ind : int
         The indices of where corruption is applied.
     """
-
     data_c = data.astype(np.int32)
     x, y = np.nonzero(data)
     ind = np.random.choice(len(x), int(0.1 * len(x)), replace=False)
@@ -228,7 +222,6 @@ def Eval_Imputation(data, data_imp, x, y, ind):
         The median L1 distance between original and imputed datasets at given
     indices.
     """
-
     L1 = np.median(np.abs(data[x[ind], y[ind]] - data_imp[x[ind], y[ind]]))
 
     return L1
@@ -308,7 +301,6 @@ def entropy_batch_mixing(latent_space, batches, K=50, n_jobs=8, n=100, n_iter=50
         The batch mixing score; the higher, the better.
 
     """
-
     n_samples = latent_space.shape[0]
     nne = NearestNeighbors(n_neighbors=K + 1, n_jobs=n_jobs)
     nne.fit(latent_space)
@@ -361,7 +353,6 @@ def plot_tSNE(latent, labels, cmap=plt.get_cmap("tab10", 7), perform_tsne=True):
         The latent space of the tSNE.
 
     """
-
     if perform_tsne:
         latent = TSNE().fit_transform(latent)
 
@@ -398,7 +389,6 @@ def HC(latent, labels, num_clusters=[2, 3, 4, 7]):
         The NMI score of each number of clusters.
 
     """
-
     nmis = []
 
     for i in num_clusters:

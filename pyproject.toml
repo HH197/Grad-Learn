@@ -6,7 +6,7 @@ requires = ["hatchling"]
 
 
 [project]
-name = "Grad-Learn"
+name = "grad-learn"
 version = "0.1.0"
 description = "Optimizing traditional machine learning models with gradient descent and GPUs."
 readme = "README.md"

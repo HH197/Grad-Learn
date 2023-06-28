@@ -13,19 +13,23 @@ concurrency:
 
 jobs:
   test:
-
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest]
-        python-version: ["3.11"]
+        include:
+          - os: ubuntu-latest
+            python: "3.11"
+
+    env:
+      OS: ${{ matrix.os }}
+      PYTHON: ${{ matrix.python }}
 
     steps:
         - uses: actions/checkout@v3
         - name: Set up Python ${{ matrix.python }}
           uses: actions/setup-python@v4
           with:
-              python-version: "3.11"
+              python-version: ${{ matrix.python }}
               cache: "pip"
               cache-dependency-path: "**/pyproject.toml"
         - name: Install dependencies

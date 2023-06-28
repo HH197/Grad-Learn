@@ -1,4 +1,4 @@
-grad.data\_prep
+﻿grad.data\_prep
 ===============
 
 .. automodule:: grad.data_prep
@@ -24,6 +24,7 @@ grad.data\_prep
       CORTEX
       Indice_Sampler
       RETINA
+      SyntheticData
    
    
 

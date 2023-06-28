@@ -2,9 +2,9 @@ name: Grad-Learn
 
 on:
   push:
-    branches: [main, tests]
+    branches: [main]
   pull_request:
-    branches: [main, tests]
+    branches: [main]
 
 
 concurrency:

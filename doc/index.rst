@@ -10,14 +10,10 @@ Welcome to Grad-Learn's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   API
 
-.. autosummary::
-   :toctree: _autosummary
-   :template: custom-module-template.rst
-   :recursive:
-
-   grad
-
+.. include:: ../README.md
+   :parser: myst_parser.sphinx_
 
 Indices and tables
 ==================

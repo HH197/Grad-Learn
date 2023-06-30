@@ -9,7 +9,7 @@
 import os
 import sys
 
-sys.path.insert(0, os.path.abspath(".."))
+sys.path.insert(0, os.path.abspath("../grad/"))
 
 project = "Grad-Learn"
 copyright = "2023, Hamid Hamidi"
@@ -26,6 +26,7 @@ extensions = [
     "sphinx.ext.autosummary",
     "sphinx_rtd_theme",
     "sphinx.ext.doctest",
+    "myst_parser",
 ]
 
 autosummary_generate = True

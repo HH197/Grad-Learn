@@ -1,3 +1,5 @@
+..
+   Adopted from https://stackoverflow.com/questions/2701998/sphinx-autodoc-is-not-automatic-enough/62613202#62613202
 {{ fullname | escape | underline}}
 
 .. currentmodule:: {{ module }}

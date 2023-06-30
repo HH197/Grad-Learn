@@ -55,4 +55,8 @@ coverage.xml
 .hypothesis/
 .pytest_cache/
 
+# doc
+doc/_autosummary/
+doc/_build/
+
 

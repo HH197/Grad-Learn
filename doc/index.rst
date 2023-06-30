@@ -10,6 +10,9 @@ Welcome to Grad-Learn's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   dataset/index.rst
+   linear_model/index.rst
+   utils/index.rst
    API
 
 .. include:: ../README.md

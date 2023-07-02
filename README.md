@@ -2,7 +2,7 @@
 
 Grad-Learn is written in Python and supported by PyTorch and Pyro on the backend.
 Grad-Learn enables flexible and scalable statistical and machine learning, unifying the best of modern deep learning and 
-classical machine learning.
+classic machine learning.
 
 With the ever-growing size of the data sets, the demand for highly-efficient, scalable machine learning solutions is 
 increasing. Usually, it is considered that deep learning models outperform other techniques if the data size is large. 

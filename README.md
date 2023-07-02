@@ -22,7 +22,7 @@ we developed the Grad-Learn.
 └── utils                       : Contains high-level functions for clustering, visualization, etc.
 ```
 
-**Install Grad-Learn from source:**
+## Install Grad-Learn from source:
 
 ```sh
 git clone https://github.com/HH197/ZINB-Grad
@@ -30,7 +30,7 @@ cd ZINB-Grad
 pip install .
 ```
 
-**Install Grad-Learn in development mode:**
+## Install Grad-Learn in development mode:
 
 Here’s how to set up Grad-Learn for local development:
 
@@ -40,4 +40,11 @@ cd ZINB-Grad
 pip pip install -e ".[dev,docs]"
 ```
 
+## Supported Operating Systems
 
+Grad-Learn is compatible with the following operating systems:
+
+- Linux (tested on Ubuntu)
+
+Please note that while Grad-Learn is expected to work on other Linux distributions, we provide official support for 
+Ubuntu.

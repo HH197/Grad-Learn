@@ -1,7 +1,7 @@
 import pytest
 import torch
 
-from grad import data_prep
+from grad.dataset import data_prep
 
 
 @pytest.fixture(scope="session")

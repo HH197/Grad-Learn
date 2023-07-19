@@ -5,7 +5,7 @@ An initial test for testing the packages in production.
 import torch
 from torch.utils.data import DataLoader
 
-import grad.ZINB_grad as ZINB_grad
+from grad.linear_model import ZINB_grad
 
 
 def test_learning(synth_data, device):

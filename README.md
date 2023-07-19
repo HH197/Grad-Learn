@@ -1,4 +1,6 @@
+![Tests](https://github.com/HH197/Grad-Learn/actions/workflows/test.yml/badge.svg)
 # Grad-Learn
+
 
 Grad-Learn is written in Python and supported by PyTorch and Pyro on the backend.
 Grad-Learn enables flexible and scalable statistical and machine learning, unifying the best of modern deep learning and 

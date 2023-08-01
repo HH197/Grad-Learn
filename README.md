@@ -51,3 +51,25 @@ Grad-Learn is compatible with the following operating systems:
 
 Please note that while Grad-Learn is expected to work on other Linux distributions, we provide official support for 
 Ubuntu.
+
+## Citation
+
+If you use Grad-learn in a scientific publication, we would appreciate citations to the following paper:
+
+[Gradient-based implementation of linear model outperforms deep learning models](https://www.biorxiv.org/content/10.1101/2023.07.29.551062v1)
+
+Bibtex entry:
+```
+{Hamidi2023.07.29.551062,
+	author = {Hamid Hamidi and Dinghao Wang and Quan Long and Matthew Greenberg},
+	title = {Gradient-based implementation of linear model outperforms deep learning models},
+	elocation-id = {2023.07.29.551062},
+	year = {2023},
+	doi = {10.1101/2023.07.29.551062},
+	publisher = {Cold Spring Harbor Laboratory},
+	abstract = {Deep learning has been widely considered more effective than traditional statistical models in modeling biological complex data such as single-cell omics. Here we show the devil is hidden in details: by adapting a modern gradient solver to a traditional linear mixed model, we showed that conventional models can outperform deep models in terms of both speed and accuracy. This work reveals the potential of re-implementing traditional models with modern solvers.Competing Interest StatementThe authors have declared no competing interest.},
+	URL = {https://www.biorxiv.org/content/early/2023/07/29/2023.07.29.551062},
+	eprint = {https://www.biorxiv.org/content/early/2023/07/29/2023.07.29.551062.full.pdf},
+	journal = {bioRxiv}
+}
+```

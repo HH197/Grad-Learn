@@ -60,7 +60,7 @@ If you use Grad-learn in a scientific publication, we would appreciate citations
 
 Bibtex entry:
 ```
-{Hamidi2023.07.29.551062,
+{Grad-Learn,
 	author = {Hamid Hamidi and Dinghao Wang and Quan Long and Matthew Greenberg},
 	title = {Gradient-based implementation of linear model outperforms deep learning models},
 	elocation-id = {2023.07.29.551062},

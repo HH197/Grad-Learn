@@ -1,0 +1,38 @@
+..
+   Adopted from https://stackoverflow.com/questions/2701998/sphinx-autodoc-is-not-automatic-enough/62613202#62613202
+dataset.data\_prep
+==================
+
+.. automodule:: dataset.data_prep
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+      :nosignatures:
+   
+      Brain_Large
+      CORTEX
+      Indice_Sampler
+      RETINA
+      SyntheticData
+   
+   
+
+   
+   
+   
+
+
+

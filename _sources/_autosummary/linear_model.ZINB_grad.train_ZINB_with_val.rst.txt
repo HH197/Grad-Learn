@@ -1,0 +1,6 @@
+linear\_model.ZINB\_grad.train\_ZINB\_with\_val
+===============================================
+
+.. currentmodule:: linear_model.ZINB_grad
+
+.. autofunction:: train_ZINB_with_val

@@ -1,0 +1,80 @@
+..
+   Adopted from https://stackoverflow.com/questions/2701998/sphinx-autodoc-is-not-automatic-enough/62613202#62613202
+linear\_model.ZINB\_grad.ZINB\_Grad
+===================================
+
+.. currentmodule:: linear_model.ZINB_grad
+
+.. autoclass:: ZINB_Grad
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~ZINB_Grad.add_module
+      ~ZINB_Grad.apply
+      ~ZINB_Grad.bfloat16
+      ~ZINB_Grad.buffers
+      ~ZINB_Grad.children
+      ~ZINB_Grad.cpu
+      ~ZINB_Grad.cuda
+      ~ZINB_Grad.double
+      ~ZINB_Grad.eval
+      ~ZINB_Grad.extra_repr
+      ~ZINB_Grad.float
+      ~ZINB_Grad.forward
+      ~ZINB_Grad.get_buffer
+      ~ZINB_Grad.get_extra_state
+      ~ZINB_Grad.get_parameter
+      ~ZINB_Grad.get_submodule
+      ~ZINB_Grad.half
+      ~ZINB_Grad.ipu
+      ~ZINB_Grad.load_state_dict
+      ~ZINB_Grad.modules
+      ~ZINB_Grad.named_buffers
+      ~ZINB_Grad.named_children
+      ~ZINB_Grad.named_modules
+      ~ZINB_Grad.named_parameters
+      ~ZINB_Grad.parameters
+      ~ZINB_Grad.register_backward_hook
+      ~ZINB_Grad.register_buffer
+      ~ZINB_Grad.register_forward_hook
+      ~ZINB_Grad.register_forward_pre_hook
+      ~ZINB_Grad.register_full_backward_hook
+      ~ZINB_Grad.register_full_backward_pre_hook
+      ~ZINB_Grad.register_load_state_dict_post_hook
+      ~ZINB_Grad.register_module
+      ~ZINB_Grad.register_parameter
+      ~ZINB_Grad.register_state_dict_pre_hook
+      ~ZINB_Grad.requires_grad_
+      ~ZINB_Grad.set_extra_state
+      ~ZINB_Grad.share_memory
+      ~ZINB_Grad.state_dict
+      ~ZINB_Grad.to
+      ~ZINB_Grad.to_empty
+      ~ZINB_Grad.train
+      ~ZINB_Grad.type
+      ~ZINB_Grad.xpu
+      ~ZINB_Grad.zero_grad
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~ZINB_Grad.T_destination
+      ~ZINB_Grad.call_super_init
+      ~ZINB_Grad.dump_patches
+      ~ZINB_Grad.training
+   
+   

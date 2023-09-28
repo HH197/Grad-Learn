@@ -1,0 +1,32 @@
+﻿..
+   Adopted from https://stackoverflow.com/questions/2701998/sphinx-autodoc-is-not-automatic-enough/62613202#62613202
+dataset
+=======
+
+.. automodule:: dataset
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+
+.. autosummary::
+   :toctree:
+   :template: custom-module-template.rst
+   :recursive:
+
+   dataset.data_prep
+

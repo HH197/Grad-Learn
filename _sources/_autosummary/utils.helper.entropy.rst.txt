@@ -1,0 +1,6 @@
+utils.helper.entropy
+====================
+
+.. currentmodule:: utils.helper
+
+.. autofunction:: entropy

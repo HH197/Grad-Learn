@@ -1,0 +1,41 @@
+..
+   Adopted from https://stackoverflow.com/questions/2701998/sphinx-autodoc-is-not-automatic-enough/62613202#62613202
+utils.helper
+============
+
+.. automodule:: utils.helper
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      Eval_Imputation
+      HC
+      corrupting
+      entropy
+      entropy_batch_mixing
+      kmeans
+      measure_q
+      plot_line
+      plot_tSNE
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+

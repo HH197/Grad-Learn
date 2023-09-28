@@ -1,0 +1,6 @@
+utils.helper.entropy\_batch\_mixing
+===================================
+
+.. currentmodule:: utils.helper
+
+.. autofunction:: entropy_batch_mixing

@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Welcome to Grad-Learn’s documentation! &mdash; Grad-Learn 0.1.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=01f34227"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Dataset Module" href="dataset/index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="#" class="icon icon-home">
+            Grad-Learn
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="dataset/index.html">Dataset Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="linear_model/index.html">Linear Models Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utils/index.html">Utility Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="API.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">Grad-Learn</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Welcome to Grad-Learn’s documentation!</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="welcome-to-grad-learn-s-documentation">
+<h1>Welcome to Grad-Learn’s documentation!<a class="headerlink" href="#welcome-to-grad-learn-s-documentation" title="Link to this heading"></a></h1>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="dataset/index.html">Dataset Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="linear_model/index.html">Linear Models Module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="linear_model/index.html#zinb-grad-a-gradient-based-linear-model-outperforming-deep-models">ZINB-Grad: A Gradient Based Linear Model Outperforming Deep Models</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="utils/index.html">Utility Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="API.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="_autosummary/dataset.html">dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_autosummary/linear_model.html">linear_model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_autosummary/utils.html">utils</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<p><img alt="Tests" src="https://github.com/HH197/Grad-Learn/actions/workflows/test.yml/badge.svg" />
+<a class="reference external" href="https://github.com/psf/black"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg" /></a></p>
+<section id="grad-learn">
+<h2>Grad-Learn<a class="headerlink" href="#grad-learn" title="Link to this heading"></a></h2>
+<p>Grad-Learn is written in Python and supported by PyTorch and Pyro on the backend.
+Grad-Learn enables flexible and scalable statistical and machine learning, unifying the best of modern deep learning and
+classic machine learning.</p>
+<p>With the ever-growing size of the data sets, the demand for highly-efficient, scalable machine learning solutions is
+increasing. Usually, it is considered that deep learning models outperform other techniques if the data size is large.
+However, if the underlying structure of the data does not require the amount of non-linearity introduced by deep models,
+this might not be the case.</p>
+<p>In this scenario, one would choose traditional machine learning or statistical learning models since they are more
+interpretable. However, the capabilities of these methods are limited by computing time and complexity for large-scale
+problems. For this reason and to bridge the gap between traditional machine learning models and large-scale data sets,
+we developed the Grad-Learn.</p>
+<section id="structure">
+<h3>Structure<a class="headerlink" href="#structure" title="Link to this heading"></a></h3>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>../grad
+├── dataset                     : Contains high-level API for loading different data sets.
+├── linear_model                : Contains linear models, including linear regression, GLMs, and GLMMs.
+└── utils                       : Contains high-level functions for clustering, visualization, etc.
+</pre></div>
+</div>
+</section>
+<section id="install-grad-learn-from-source">
+<h3>Install Grad-Learn from source:<a class="headerlink" href="#install-grad-learn-from-source" title="Link to this heading"></a></h3>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/HH197/ZINB-Grad
+<span class="nb">cd</span><span class="w"> </span>ZINB-Grad
+pip<span class="w"> </span>install<span class="w"> </span>.
+</pre></div>
+</div>
+</section>
+<section id="install-grad-learn-in-development-mode">
+<h3>Install Grad-Learn in development mode:<a class="headerlink" href="#install-grad-learn-in-development-mode" title="Link to this heading"></a></h3>
+<p>Here’s how to set up Grad-Learn for local development:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/HH197/ZINB-Grad
+<span class="nb">cd</span><span class="w"> </span>ZINB-Grad
+pip<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;.[dev,docs]&quot;</span>
+</pre></div>
+</div>
+</section>
+<section id="supported-operating-systems">
+<h3>Supported Operating Systems<a class="headerlink" href="#supported-operating-systems" title="Link to this heading"></a></h3>
+<p>Grad-Learn is compatible with the following operating systems:</p>
+<ul class="simple">
+<li><p>Linux (tested on Ubuntu)</p></li>
+</ul>
+<p>Please note that while Grad-Learn is expected to work on other Linux distributions, we provide official support for
+Ubuntu.</p>
+</section>
+<section id="citation">
+<h3>Citation<a class="headerlink" href="#citation" title="Link to this heading"></a></h3>
+<p>If you use Grad-learn in a scientific publication, we would appreciate citations to the following paper:</p>
+<p><a class="reference external" href="https://www.biorxiv.org/content/10.1101/2023.07.29.551062v1">Gradient-based implementation of linear model outperforms deep learning models</a></p>
+<p>Bibtex entry:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="n">Grad</span><span class="o">-</span><span class="n">Learn</span><span class="p">,</span>
+        <span class="n">author</span> <span class="o">=</span> <span class="p">{</span><span class="n">Hamid</span> <span class="n">Hamidi</span> <span class="ow">and</span> <span class="n">Dinghao</span> <span class="n">Wang</span> <span class="ow">and</span> <span class="n">Quan</span> <span class="n">Long</span> <span class="ow">and</span> <span class="n">Matthew</span> <span class="n">Greenberg</span><span class="p">},</span>
+        <span class="n">title</span> <span class="o">=</span> <span class="p">{</span><span class="n">Gradient</span><span class="o">-</span><span class="n">based</span> <span class="n">implementation</span> <span class="n">of</span> <span class="n">linear</span> <span class="n">model</span> <span class="n">outperforms</span> <span class="n">deep</span> <span class="n">learning</span> <span class="n">models</span><span class="p">},</span>
+        <span class="n">elocation</span><span class="o">-</span><span class="nb">id</span> <span class="o">=</span> <span class="p">{</span><span class="mf">2023.07.29.551062</span><span class="p">},</span>
+        <span class="n">year</span> <span class="o">=</span> <span class="p">{</span><span class="mi">2023</span><span class="p">},</span>
+        <span class="n">doi</span> <span class="o">=</span> <span class="p">{</span><span class="mf">10.1101</span><span class="o">/</span><span class="mf">2023.07.29.551062</span><span class="p">},</span>
+        <span class="n">publisher</span> <span class="o">=</span> <span class="p">{</span><span class="n">Cold</span> <span class="n">Spring</span> <span class="n">Harbor</span> <span class="n">Laboratory</span><span class="p">},</span>
+        <span class="n">abstract</span> <span class="o">=</span> <span class="p">{</span><span class="n">Deep</span> <span class="n">learning</span> <span class="n">has</span> <span class="n">been</span> <span class="n">widely</span> <span class="n">considered</span> <span class="n">more</span> <span class="n">effective</span> <span class="n">than</span> <span class="n">traditional</span> <span class="n">statistical</span> <span class="n">models</span> <span class="ow">in</span> <span class="n">modeling</span> <span class="n">biological</span> <span class="nb">complex</span> <span class="n">data</span> <span class="n">such</span> <span class="k">as</span> <span class="n">single</span><span class="o">-</span><span class="n">cell</span> <span class="n">omics</span><span class="o">.</span> <span class="n">Here</span> <span class="n">we</span> <span class="n">show</span> <span class="n">the</span> <span class="n">devil</span> <span class="ow">is</span> <span class="n">hidden</span> <span class="ow">in</span> <span class="n">details</span><span class="p">:</span> <span class="n">by</span> <span class="n">adapting</span> <span class="n">a</span> <span class="n">modern</span> <span class="n">gradient</span> <span class="n">solver</span> <span class="n">to</span> <span class="n">a</span> <span class="n">traditional</span> <span class="n">linear</span> <span class="n">mixed</span> <span class="n">model</span><span class="p">,</span> <span class="n">we</span> <span class="n">showed</span> <span class="n">that</span> <span class="n">conventional</span> <span class="n">models</span> <span class="n">can</span> <span class="n">outperform</span> <span class="n">deep</span> <span class="n">models</span> <span class="ow">in</span> <span class="n">terms</span> <span class="n">of</span> <span class="n">both</span> <span class="n">speed</span> <span class="ow">and</span> <span class="n">accuracy</span><span class="o">.</span> <span class="n">This</span> <span class="n">work</span> <span class="n">reveals</span> <span class="n">the</span> <span class="n">potential</span> <span class="n">of</span> <span class="n">re</span><span class="o">-</span><span class="n">implementing</span> <span class="n">traditional</span> <span class="n">models</span> <span class="k">with</span> <span class="n">modern</span> <span class="n">solvers</span><span class="o">.</span><span class="n">Competing</span> <span class="n">Interest</span> <span class="n">StatementThe</span> <span class="n">authors</span> <span class="n">have</span> <span class="n">declared</span> <span class="n">no</span> <span class="n">competing</span> <span class="n">interest</span><span class="o">.</span><span class="p">},</span>
+        <span class="n">URL</span> <span class="o">=</span> <span class="p">{</span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">www</span><span class="o">.</span><span class="n">biorxiv</span><span class="o">.</span><span class="n">org</span><span class="o">/</span><span class="n">content</span><span class="o">/</span><span class="n">early</span><span class="o">/</span><span class="mi">2023</span><span class="o">/</span><span class="mi">07</span><span class="o">/</span><span class="mi">29</span><span class="o">/</span><span class="mf">2023.07.29.551062</span><span class="p">},</span>
+        <span class="n">eprint</span> <span class="o">=</span> <span class="p">{</span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">www</span><span class="o">.</span><span class="n">biorxiv</span><span class="o">.</span><span class="n">org</span><span class="o">/</span><span class="n">content</span><span class="o">/</span><span class="n">early</span><span class="o">/</span><span class="mi">2023</span><span class="o">/</span><span class="mi">07</span><span class="o">/</span><span class="mi">29</span><span class="o">/</span><span class="mf">2023.07.29.551062</span><span class="o">.</span><span class="n">full</span><span class="o">.</span><span class="n">pdf</span><span class="p">},</span>
+        <span class="n">journal</span> <span class="o">=</span> <span class="p">{</span><span class="n">bioRxiv</span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+<section id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Link to this heading"></a></h1>
+<ul class="simple">
+<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
+<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
+<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
+</ul>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="dataset/index.html" class="btn btn-neutral float-right" title="Dataset Module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Hamid Hamidi.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
